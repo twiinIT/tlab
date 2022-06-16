@@ -10,8 +10,14 @@ export const ITwiinITLabStore = new Token<ITwiinITLabStore>(
   'twiinit_lab:ITwiinITLabStore'
 );
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ITwiinITLabStore {}
+export interface ITwiinITLabStore {
+  newInstance(id: string): ITwiinITLabStoreInstance;
+}
+
+export interface ITwiinITLabStoreInstance {
+  connect(): Promise<void>;
+  dispose(): Promise<void>;
+}
 
 export const labStorePlugin: JupyterFrontEndPlugin<ITwiinITLabStore> = {
   id: 'twiinit_lab:store',
@@ -21,14 +27,26 @@ export const labStorePlugin: JupyterFrontEndPlugin<ITwiinITLabStore> = {
     app: JupyterFrontEnd,
     front: ITwiinITLabFront
   ): ITwiinITLabStore => {
-    return new TwiinITLabStore(app);
+    const store = new TwiinITLabStore(app);
+    front.store = store;
+    return store;
   }
 };
 
 class TwiinITLabStore implements ITwiinITLabStore {
-  private sessionContext: SessionContext;
+  constructor(private app: JupyterFrontEnd) {}
 
-  constructor(private app: JupyterFrontEnd) {
+  newInstance(id: string): TwiinITLabStoreInstance {
+    return new TwiinITLabStoreInstance(this.app);
+  }
+}
+
+class TwiinITLabStoreInstance implements ITwiinITLabStoreInstance {
+  private sessionContext?: SessionContext;
+
+  constructor(private app: JupyterFrontEnd) {}
+
+  async connect() {
     const serviceManager = this.app.serviceManager;
 
     this.sessionContext = new SessionContext({
@@ -37,10 +55,16 @@ class TwiinITLabStore implements ITwiinITLabStore {
       name: 'twiinIT Lab'
     });
 
-    this.sessionContext.initialize().then(async value => {
-      if (value) {
-        await sessionContextDialogs.selectKernel(this.sessionContext);
-      }
-    });
+    const val = await this.sessionContext.initialize();
+    if (val) {
+      await sessionContextDialogs.selectKernel(this.sessionContext);
+    }
+  }
+
+  async dispose() {
+    if (this.sessionContext) {
+      await this.sessionContext.session?.shutdown();
+      this.sessionContext.dispose();
+    }
   }
 }

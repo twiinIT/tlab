@@ -14,6 +14,7 @@ export interface ITwiinITLabPyArray {}
 
 export const labPyArrayPlugin: JupyterFrontEndPlugin<ITwiinITLabPyArray> = {
   id: 'twiinit_lab:pyarray',
+  autoStart: true,
   requires: [ITwiinITLabStore],
   provides: ITwiinITLabPyArray,
   activate: (
