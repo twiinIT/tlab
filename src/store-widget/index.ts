@@ -11,6 +11,7 @@ export const labStoreWidgetPlugin: JupyterFrontEndPlugin<void> = {
   requires: [ITLabFront],
   activate: (app: JupyterFrontEnd, front: ITLabFront) => {
     front.widgets.set('store_widget', {
+      id: 'store',
       name: 'Store',
       component: StoreWidget
     });

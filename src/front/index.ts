@@ -26,6 +26,7 @@ export interface ITLabWidgetProps {
 }
 
 export interface ITLabWidget {
+  id: string;
   name: string;
   component: (props: ITLabWidgetProps) => JSX.Element;
 }
@@ -42,7 +43,7 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
     labShell: ILabShell,
     palette?: ICommandPalette,
     launcher?: ILauncher
-  ): ITLabFront => {
+  ) => {
     const front = new TLabFront();
 
     const command = CommandIDs.open;
@@ -65,5 +66,5 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
 };
 
 class TLabFront implements ITLabFront {
-  widgets: Map<string, ITLabWidget> = new Map();
+  widgets = new Map<string, ITLabWidget>();
 }
