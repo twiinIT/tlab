@@ -6,32 +6,36 @@ import {
 import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { Token } from '@lumino/coreutils';
-import { TwiinITLabWidget } from './widget';
+import { TLabShellWidget } from './widget';
 
 namespace CommandIDs {
   export const open = 'twiinit_lab:open';
 }
 
-export const ITwiinITLabFront = new Token<ITwiinITLabFront>(
-  'twiinit_lab:ITwiinITLabFront'
-);
+export const ITLabFront = new Token<ITLabFront>('twiinit_lab:ITLabFront');
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ITwiinITLabFront {}
+export interface ITLabFront {
+  widgets: ITLabWidget[];
+}
 
-export const labFrontPlugin: JupyterFrontEndPlugin<ITwiinITLabFront> = {
+export interface ITLabWidget {
+  id: string;
+  name: string;
+}
+
+export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
   id: 'twiinit_lab:front',
   autoStart: true,
   requires: [ILabShell],
   optional: [ICommandPalette, ILauncher],
-  provides: ITwiinITLabFront,
+  provides: ITLabFront,
   activate: (
     app: JupyterFrontEnd,
     labShell: ILabShell,
     palette?: ICommandPalette,
     launcher?: ILauncher
-  ): ITwiinITLabFront => {
-    const front = new TwiinITLabFront();
+  ): ITLabFront => {
+    const front = new TLabFront();
 
     const command = CommandIDs.open;
     const label = 'Open twiinIT Lab';
@@ -40,7 +44,7 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITwiinITLabFront> = {
     app.commands.addCommand(command, {
       label,
       execute: () => {
-        const widget = new TwiinITLabWidget();
+        const widget = new TLabShellWidget(front);
         labShell.add(widget, 'main');
       }
     });
@@ -52,4 +56,6 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITwiinITLabFront> = {
   }
 };
 
-class TwiinITLabFront implements ITwiinITLabFront {}
+class TLabFront implements ITLabFront {
+  widgets: ITLabWidget[] = [];
+}

@@ -4,20 +4,18 @@ import {
 } from '@jupyterlab/application';
 import { Token } from '@lumino/coreutils';
 
-export const ITwiinITLabStore = new Token<ITwiinITLabStore>(
-  'twiinit_lab:ITwiinITLabStore'
-);
+export const ITLabStore = new Token<ITLabStore>('twiinit_lab:ITLabStore');
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ITwiinITLabStore {}
+export interface ITLabStore {}
 
-export const labStorePlugin: JupyterFrontEndPlugin<ITwiinITLabStore> = {
+export const labStorePlugin: JupyterFrontEndPlugin<ITLabStore> = {
   id: 'twiinit_lab:store',
-  provides: ITwiinITLabStore,
-  activate: (app: JupyterFrontEnd): ITwiinITLabStore => {
-    const store = new TwiinITLabStore();
+  provides: ITLabStore,
+  activate: (app: JupyterFrontEnd): ITLabStore => {
+    const store = new TLabStore();
     return store;
   }
 };
 
-class TwiinITLabStore implements ITwiinITLabStore {}
+class TLabStore implements ITLabStore {}
