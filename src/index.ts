@@ -1,13 +1,7 @@
 import { labFrontPlugin } from './front';
 import { labPlotlyPlugin } from './plotly';
-import { labPyArrayPlugin } from './pyarray';
 import { labStorePlugin } from './store';
 
-const plugins = [
-  labFrontPlugin,
-  labPlotlyPlugin,
-  labPyArrayPlugin,
-  labStorePlugin
-];
+const plugins = [labFrontPlugin, labPlotlyPlugin, labStorePlugin];
 
 export default plugins;

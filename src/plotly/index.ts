@@ -3,16 +3,16 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { ITwiinITLabFront } from '../front';
-import { ITwiinITLabPyArray } from '../pyarray';
+import { ITwiinITLabStore } from '../store';
 
 export const labPlotlyPlugin: JupyterFrontEndPlugin<void> = {
   id: 'twiinit_lab:plotly',
   autoStart: true,
-  requires: [ITwiinITLabFront, ITwiinITLabPyArray],
+  requires: [ITwiinITLabFront, ITwiinITLabStore],
   activate: (
     app: JupyterFrontEnd,
     front: ITwiinITLabFront,
-    pyarray: ITwiinITLabPyArray
+    store: ITwiinITLabStore
   ) => {
     return;
   }

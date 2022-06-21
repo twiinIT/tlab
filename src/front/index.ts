@@ -6,7 +6,6 @@ import {
 import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { Token } from '@lumino/coreutils';
-import { ITwiinITLabStore } from '../store';
 import { TwiinITLabWidget } from './widget';
 
 namespace CommandIDs {
@@ -18,9 +17,7 @@ export const ITwiinITLabFront = new Token<ITwiinITLabFront>(
 );
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ITwiinITLabFront {
-  store?: ITwiinITLabStore;
-}
+export interface ITwiinITLabFront {}
 
 export const labFrontPlugin: JupyterFrontEndPlugin<ITwiinITLabFront> = {
   id: 'twiinit_lab:front',
@@ -43,7 +40,7 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITwiinITLabFront> = {
     app.commands.addCommand(command, {
       label,
       execute: () => {
-        const widget = new TwiinITLabWidget(front);
+        const widget = new TwiinITLabWidget();
         labShell.add(widget, 'main');
       }
     });
@@ -55,6 +52,4 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITwiinITLabFront> = {
   }
 };
 
-class TwiinITLabFront implements ITwiinITLabFront {
-  store?: ITwiinITLabStore;
-}
+class TwiinITLabFront implements ITwiinITLabFront {}
