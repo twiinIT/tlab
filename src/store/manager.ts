@@ -9,6 +9,10 @@ export const ITLabStoreManager = new Token<ITLabStoreManager>(
 );
 
 export interface ITLabStoreManager {
+  kernelStoreHandlerFactories: Map<
+    string,
+    (kernel: Kernel.IKernelConnection) => IKernelStoreHandler
+  >;
   newStore(): TLabStore;
   getKernelStoreHandler(
     kernel: Kernel.IKernelConnection
@@ -16,9 +20,18 @@ export interface ITLabStoreManager {
 }
 
 export class TLabStoreManager implements ITLabStoreManager {
+  kernelStoreHandlerFactories = new Map<
+    string,
+    (kernel: Kernel.IKernelConnection) => IKernelStoreHandler
+  >();
   private kernelStoreHandlers = new Map<string, IKernelStoreHandler>();
 
-  constructor(private app: JupyterFrontEnd) {}
+  constructor(private app: JupyterFrontEnd) {
+    this.kernelStoreHandlerFactories.set(
+      'python',
+      kernel => new PythonKernelStoreHandler(kernel)
+    );
+  }
 
   newStore(): TLabStore {
     return new TLabStore(this.app, this);
@@ -27,15 +40,15 @@ export class TLabStoreManager implements ITLabStoreManager {
   async getKernelStoreHandler(
     kernel: Kernel.IKernelConnection
   ): Promise<IKernelStoreHandler> {
-    // TODO: language handling
-    const infos = await kernel.info;
-    const language = infos.language_info.name;
-    if (language !== 'python') {
-      throw new Error('Language not supported');
-    }
     let handler = this.kernelStoreHandlers.get(kernel.id);
     if (!handler) {
-      handler = new PythonKernelStoreHandler(kernel);
+      const infos = await kernel.info;
+      const language = infos.language_info.name;
+      const factory = this.kernelStoreHandlerFactories.get(language);
+      if (!factory) {
+        throw new Error('Language not supported');
+      }
+      handler = factory(kernel);
       this.kernelStoreHandlers.set(kernel.id, handler);
     }
     return handler;

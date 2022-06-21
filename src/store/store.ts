@@ -20,6 +20,14 @@ export class TLabStore {
     });
   }
 
+  get kernel(): Kernel.IKernelConnection {
+    const kernel = this.sessionContext.session?.kernel;
+    if (!kernel) {
+      throw new Error("Store doesn't have a kernel");
+    }
+    return kernel;
+  }
+
   async connect(): Promise<void> {
     // User kernel selection
     const val = await this.sessionContext.initialize();
@@ -30,13 +38,5 @@ export class TLabStore {
     this.kernelStoreHandler = await this.manager.getKernelStoreHandler(
       this.kernel
     );
-  }
-
-  get kernel(): Kernel.IKernelConnection {
-    const kernel = this.sessionContext.session?.kernel;
-    if (!kernel) {
-      throw new Error("Store doesn't have a kernel");
-    }
-    return kernel;
   }
 }

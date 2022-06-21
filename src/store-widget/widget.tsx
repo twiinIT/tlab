@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { ITLabWidgetProps } from '../front/front';
 
 export function StoreWidget({
