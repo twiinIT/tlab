@@ -1,5 +1,6 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
+import { Kernel } from '@jupyterlab/services';
 import { IKernelStoreHandler } from './handler';
 import { ITLabStoreManager } from './manager';
 
@@ -19,7 +20,7 @@ export class TLabStore {
     });
   }
 
-  async connect() {
+  async connect(): Promise<void> {
     // User kernel selection
     const val = await this.sessionContext.initialize();
     if (val) {
@@ -31,7 +32,7 @@ export class TLabStore {
     );
   }
 
-  get kernel() {
+  get kernel(): Kernel.IKernelConnection {
     const kernel = this.sessionContext.session?.kernel;
     if (!kernel) {
       throw new Error("Store doesn't have a kernel");

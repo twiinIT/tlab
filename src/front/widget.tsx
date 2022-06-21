@@ -21,7 +21,7 @@ export class TLabShellWidget extends ReactWidget {
     this.title.icon = listIcon;
   }
 
-  render() {
+  render(): JSX.Element {
     return <TwiinITLab app={this.app} front={this.front} store={this.store} />;
   }
 }

@@ -24,7 +24,9 @@ export class TLabStoreManager implements ITLabStoreManager {
     return new TLabStore(this.app, this);
   }
 
-  async getKernelStoreHandler(kernel: Kernel.IKernelConnection) {
+  async getKernelStoreHandler(
+    kernel: Kernel.IKernelConnection
+  ): Promise<IKernelStoreHandler> {
     // TODO: language handling
     const infos = await kernel.info;
     const language = infos.language_info.name;
