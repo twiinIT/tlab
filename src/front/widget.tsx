@@ -4,8 +4,8 @@ import { Widget } from '@lumino/widgets';
 import { listIcon } from '@jupyterlab/ui-components';
 import React from 'react';
 import { UUID } from '@lumino/coreutils';
-import { ITLabFront, ITLabWidgetProps } from '.';
-import { TLabStore } from '../store';
+import { ITLabFront, ITLabWidgetProps } from './front';
+import { TLabStore } from '../store/store';
 
 export class TLabShellWidget extends ReactWidget {
   constructor(

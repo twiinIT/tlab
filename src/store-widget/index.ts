@@ -2,7 +2,7 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ITLabFront } from '../front';
+import { ITLabFront } from '../front/front';
 import { StoreWidget } from './widget';
 
 export const labStoreWidgetPlugin: JupyterFrontEndPlugin<void> = {

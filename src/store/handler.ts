@@ -1,5 +1,6 @@
 import { Kernel } from '@jupyterlab/services';
-import { IKernelStoreHandler } from '.';
+
+export interface IKernelStoreHandler {}
 
 export class PythonKernelStoreHandler implements IKernelStoreHandler {
   constructor(private kernel: Kernel.IKernelConnection) {}

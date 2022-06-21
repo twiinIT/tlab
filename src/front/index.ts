@@ -5,30 +5,12 @@ import {
 } from '@jupyterlab/application';
 import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
-import { Token } from '@lumino/coreutils';
-import { ITLabStoreManager, TLabStore } from '../store';
+import { ITLabStoreManager } from '../store/manager';
+import { ITLabFront, TLabFront } from './front';
 import { TLabShellWidget } from './widget';
 
 namespace CommandIDs {
   export const open = 'twiinit_lab:open';
-}
-
-export const ITLabFront = new Token<ITLabFront>('twiinit_lab:ITLabFront');
-
-export interface ITLabFront {
-  widgets: Map<string, ITLabWidget>;
-}
-
-export interface ITLabWidgetProps {
-  app: JupyterFrontEnd;
-  front: ITLabFront;
-  store: TLabStore;
-}
-
-export interface ITLabWidget {
-  id: string;
-  name: string;
-  component: (props: ITLabWidgetProps) => JSX.Element;
 }
 
 export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
@@ -64,7 +46,3 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
     return front;
   }
 };
-
-class TLabFront implements ITLabFront {
-  widgets = new Map<string, ITLabWidget>();
-}

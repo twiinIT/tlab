@@ -2,7 +2,7 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ITLabFront } from '../front';
+import { ITLabFront } from '../front/front';
 
 export const labPlotlyPlugin: JupyterFrontEndPlugin<void> = {
   id: 'twiinit_lab:plotly',
