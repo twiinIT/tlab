@@ -11,6 +11,7 @@ export interface ITLabStore {}
 
 export const labStorePlugin: JupyterFrontEndPlugin<ITLabStore> = {
   id: 'twiinit_lab:store',
+  autoStart: true,
   provides: ITLabStore,
   activate: (app: JupyterFrontEnd): ITLabStore => {
     const store = new TLabStore();
