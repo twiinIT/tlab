@@ -2,21 +2,56 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
+import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
 import { Token } from '@lumino/coreutils';
 
-export const ITLabStore = new Token<ITLabStore>('twiinit_lab:ITLabStore');
+export const ITLabStoreManager = new Token<ITLabStoreManager>(
+  'twiinit_lab:ITLabStoreManager'
+);
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ITLabStore {}
+export interface ITLabStoreManager {
+  newStore(): TLabStore;
+}
 
-export const labStorePlugin: JupyterFrontEndPlugin<ITLabStore> = {
-  id: 'twiinit_lab:store',
+export const labStoreManagerPlugin: JupyterFrontEndPlugin<ITLabStoreManager> = {
+  id: 'twiinit_lab:store_manager',
   autoStart: true,
-  provides: ITLabStore,
-  activate: (app: JupyterFrontEnd): ITLabStore => {
-    const store = new TLabStore();
+  provides: ITLabStoreManager,
+  activate: (app: JupyterFrontEnd): ITLabStoreManager => {
+    const store = new TLabStoreManager(app);
     return store;
   }
 };
 
-class TLabStore implements ITLabStore {}
+class TLabStoreManager implements ITLabStoreManager {
+  constructor(private app: JupyterFrontEnd) {}
+
+  newStore(): TLabStore {
+    return new TLabStore(this.app, this);
+  }
+}
+
+export class TLabStore {
+  sessionContext: SessionContext;
+
+  constructor(
+    private app: JupyterFrontEnd,
+    private manager: ITLabStoreManager
+  ) {
+    const serviceManager = this.app.serviceManager;
+
+    this.sessionContext = new SessionContext({
+      sessionManager: serviceManager.sessions,
+      specsManager: serviceManager.kernelspecs,
+      name: 'twiinIT Lab'
+    });
+  }
+
+  async connect(): Promise<void> {
+    console.log(this);
+    const val = await this.sessionContext.initialize();
+    if (val) {
+      await sessionContextDialogs.selectKernel(this.sessionContext);
+    }
+  }
+}

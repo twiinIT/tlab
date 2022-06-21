@@ -5,13 +5,13 @@ import { listIcon } from '@jupyterlab/ui-components';
 import React from 'react';
 import { UUID } from '@lumino/coreutils';
 import { ITLabFront, ITLabWidgetProps } from '.';
-import { ITLabStore } from '../store';
+import { TLabStore } from '../store';
 
 export class TLabShellWidget extends ReactWidget {
   constructor(
     private app: JupyterFrontEnd,
     private front: ITLabFront,
-    private store: ITLabStore,
+    private store: TLabStore,
     options?: Widget.IOptions
   ) {
     super(options);
@@ -19,7 +19,6 @@ export class TLabShellWidget extends ReactWidget {
     this.title.label = 'twiinIT Lab';
     this.title.closable = true;
     this.title.icon = listIcon;
-    console.log(this.store);
   }
 
   render(): JSX.Element {
