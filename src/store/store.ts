@@ -38,5 +38,7 @@ export class TLabStore {
     this.kernelStoreHandler = await this.manager.getKernelStoreHandler(
       this.kernel
     );
+    await this.kernelStoreHandler.ready;
+    console.log('KernelStore ready');
   }
 }

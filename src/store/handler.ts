@@ -1,1 +1,3 @@
-export interface IKernelStoreHandler {}
+export interface IKernelStoreHandler {
+  ready: Promise<void>;
+}
