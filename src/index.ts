@@ -1,15 +1,15 @@
 import { labFrontPlugin } from './front';
-import { labPlotlyPlugin } from './plotly';
 import { labStoreManagerPlugin } from './store';
 import { labStorePythonPlugin } from './store-python';
-import { labStoreWidgetPlugin } from './store-widget';
+import { labWidgetPlotlyPlugin } from './widget-plotly';
+import { labWidgetStorePlugin } from './widget-store';
 
 const plugins = [
   labFrontPlugin,
-  labPlotlyPlugin,
   labStoreManagerPlugin,
   labStorePythonPlugin,
-  labStoreWidgetPlugin
+  labWidgetPlotlyPlugin,
+  labWidgetStorePlugin
 ];
 
 export default plugins;

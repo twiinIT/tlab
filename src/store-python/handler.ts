@@ -2,36 +2,6 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONValue, PromiseDelegate } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
 
-const code = `
-def target_func(comm, open_msg):
-    handlers = {}
-
-    @comm.on_msg
-    def _recv(msg):
-        name = msg['content']['data'].get('name', None)
-        value = msg['content']['data'].get('value', None)
-        handler = handlers.get(name, None)
-        if handler is None:
-            print('No handler for:', msg)
-            return
-        try:
-            handler(value)
-        except Exception as e:
-            comm.send({'name': 'error', 'value': str(e)})
-
-    def on(name):
-        def decorator(func):
-            handlers[name] = func
-            return func
-        return decorator
-
-    if open_msg['content']['data'].get('name', None) == 'syn':
-        comm.send({'name': 'ack'})
-
-
-get_ipython().kernel.comm_manager.register_target('twiinit_lab', target_func)
-`;
-
 export class PythonKernelStoreHandler implements IKernelStoreHandler {
   private static handlers: Map<string, (v: JSONValue) => void> = new Map();
   private _ready: PromiseDelegate<void>;
@@ -97,3 +67,33 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     throw new Error(value?.toString());
   }
 }
+
+const code = `
+def target_func(comm, open_msg):
+    handlers = {}
+
+    @comm.on_msg
+    def _recv(msg):
+        name = msg['content']['data'].get('name', None)
+        value = msg['content']['data'].get('value', None)
+        handler = handlers.get(name, None)
+        if handler is None:
+            print('No handler for:', msg)
+            return
+        try:
+            handler(value)
+        except Exception as e:
+            comm.send({'name': 'error', 'value': str(e)})
+
+    def on(name):
+        def decorator(func):
+            handlers[name] = func
+            return func
+        return decorator
+
+    if open_msg['content']['data'].get('name', None) == 'syn':
+        comm.send({'name': 'ack'})
+
+
+get_ipython().kernel.comm_manager.register_target('twiinit_lab', target_func)
+`;
