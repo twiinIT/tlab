@@ -1,7 +1,7 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Kernel } from '@jupyterlab/services';
 import { Token } from '@lumino/coreutils';
-import { IKernelStoreHandler, PythonKernelStoreHandler } from './handler';
+import { IKernelStoreHandler } from './handler';
 import { TLabStore } from './store';
 
 export const ITLabStoreManager = new Token<ITLabStoreManager>(
@@ -26,12 +26,7 @@ export class TLabStoreManager implements ITLabStoreManager {
   >();
   private kernelStoreHandlers = new Map<string, IKernelStoreHandler>();
 
-  constructor(private app: JupyterFrontEnd) {
-    this.kernelStoreHandlerFactories.set(
-      'python',
-      kernel => new PythonKernelStoreHandler(kernel)
-    );
-  }
+  constructor(private app: JupyterFrontEnd) {}
 
   newStore(): TLabStore {
     return new TLabStore(this.app, this);
