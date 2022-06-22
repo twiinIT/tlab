@@ -10,7 +10,6 @@
     "moduleResolution": "node",
     "noEmitOnError": true,
     "noImplicitAny": true,
-    // "noUnusedLocals": true,
     "preserveWatchOutput": true,
     "resolveJsonModule": true,
     "outDir": "lib",
@@ -18,7 +17,8 @@
     "strict": true,
     "strictNullChecks": true,
     "target": "es2017",
-    "types": ["jest"]
+    "types": ["jest"],
+    "experimentalDecorators": true
   },
   "include": ["src"]
 }
