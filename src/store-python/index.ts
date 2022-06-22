@@ -10,9 +10,6 @@ export const labStorePythonPlugin: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [ITLabStoreManager],
   activate: (app: JupyterFrontEnd, storeManager: ITLabStoreManager) => {
-    storeManager.kernelStoreHandlerFactories.set(
-      'python',
-      kernel => new PythonKernelStoreHandler(kernel)
-    );
+    storeManager.registerKernelStoreHandler('python', PythonKernelStoreHandler);
   }
 };

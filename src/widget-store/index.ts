@@ -10,7 +10,7 @@ export const labWidgetStorePlugin: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [ITLabFront],
   activate: (app: JupyterFrontEnd, front: ITLabFront) => {
-    front.widgets.set('store', {
+    front.registerWidget({
       id: 'store',
       name: 'Store',
       component: StoreWidget

@@ -5,7 +5,8 @@ import { TLabStore } from '../store/store';
 export const ITLabFront = new Token<ITLabFront>('twiinit_lab:ITLabFront');
 
 export interface ITLabFront {
-  widgets: Map<string, ITLabWidget>;
+  widgets: IterableIterator<ITLabWidget>;
+  registerWidget(widget: ITLabWidget): void;
 }
 
 export interface ITLabWidget {
@@ -21,5 +22,17 @@ export interface ITLabWidgetProps {
 }
 
 export class TLabFront implements ITLabFront {
-  widgets = new Map<string, ITLabWidget>();
+  private _widgets: Map<string, ITLabWidget>;
+
+  constructor() {
+    this._widgets = new Map();
+  }
+
+  get widgets(): IterableIterator<ITLabWidget> {
+    return this._widgets.values();
+  }
+
+  registerWidget(widget: ITLabWidget): void {
+    this._widgets.set(widget.id, widget);
+  }
 }
