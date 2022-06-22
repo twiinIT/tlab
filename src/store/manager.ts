@@ -20,13 +20,16 @@ export interface ITLabStoreManager {
 }
 
 export class TLabStoreManager implements ITLabStoreManager {
-  kernelStoreHandlerFactories = new Map<
+  kernelStoreHandlerFactories: Map<
     string,
     (kernel: Kernel.IKernelConnection) => IKernelStoreHandler
-  >();
-  private kernelStoreHandlers = new Map<string, IKernelStoreHandler>();
+  >;
+  private kernelStoreHandlers: Map<string, IKernelStoreHandler>;
 
-  constructor(private app: JupyterFrontEnd) {}
+  constructor(private app: JupyterFrontEnd) {
+    this.kernelStoreHandlerFactories = new Map();
+    this.kernelStoreHandlers = new Map();
+  }
 
   newStore(): TLabStore {
     return new TLabStore(this.app, this);

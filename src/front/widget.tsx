@@ -22,11 +22,11 @@ export class TLabShellWidget extends ReactWidget {
   }
 
   render(): JSX.Element {
-    return <TwiinITLab app={this.app} front={this.front} store={this.store} />;
+    return <TLab app={this.app} front={this.front} store={this.store} />;
   }
 }
 
-function TwiinITLab({ app, front, store }: ITLabWidgetProps) {
+function TLab({ app, front, store }: ITLabWidgetProps) {
   return (
     <div>
       <div>twiinIT Lab</div>
