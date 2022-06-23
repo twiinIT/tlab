@@ -36,7 +36,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     private dsManager: ITLabPyDSManager
   ) {
     this._ready = new PromiseDelegate();
-    this.comm = this.kernel.createComm('twiinit_lab');
+    this.comm = this.kernel.createComm('tlab');
     this.comm.onMsg = this.onCommMsg.bind(this);
     this.cmdPromises = new Map();
     this.initKernel();
@@ -52,8 +52,8 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
   private async initKernel() {
     // create KernelStore and register the comm target in the kernel
     const code = `
-    from twiinit_lab.store import TLabKernelStore
-    __tlab_kernel_store = TLabKernelStore('twiinit_lab')
+    from tlab.store import TLabKernelStore
+    __tlab_kernel_store = TLabKernelStore('tlab')
     `;
     await this.kernel.requestExecute({ code }).done;
 

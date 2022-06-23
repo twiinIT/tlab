@@ -1,6 +1,6 @@
-# twiinit_lab
+# twiinIT Lab
 
-[![Github Actions Status](https://github.com/twiinIT/twiinit_lab/workflows/Build/badge.svg)](https://github.com/twiinIT/twiinit_lab/actions/workflows/build.yml)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/twiinIT/twiinit_lab/main?urlpath=lab)
+[![Github Actions Status](https://github.com/twiinIT/tlab/workflows/Build/badge.svg)](https://github.com/twiinIT/tlab/actions/workflows/build.yml)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/twiinIT/tlab/main?urlpath=lab)
 twiinIT Lab
 
 ## Requirements
@@ -12,7 +12,7 @@ twiinIT Lab
 To install the extension, execute:
 
 ```bash
-pip install twiinit_lab
+pip install tlab
 ```
 
 ## Uninstall
@@ -20,7 +20,7 @@ pip install twiinit_lab
 To remove the extension, execute:
 
 ```bash
-pip uninstall twiinit_lab
+pip uninstall tlab
 ```
 
 ## Contributing
@@ -35,7 +35,7 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Change directory to the twiinit_lab directory
+# Change directory to the tlab directory
 # Install package in development mode
 pip install -e .
 # Link your development version of the extension with JupyterLab
@@ -64,12 +64,12 @@ jupyter lab build --minimize=False
 ### Development uninstall
 
 ```bash
-pip uninstall twiinit_lab
+pip uninstall tlab
 ```
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `twiinit_lab` within that folder.
+folder is located. Then you can remove the symlink named `tlab` within that folder.
 
 ### Testing the extension
 

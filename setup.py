@@ -1,5 +1,5 @@
 """
-twiinit_lab setup
+tlab setup
 """
 import json
 import sys
@@ -13,7 +13,7 @@ HERE = Path(__file__).parent.resolve()
 pkg_json = json.loads((HERE / "package.json").read_bytes())
 
 # The name of the project
-name = "twiinit_lab"
+name = "tlab"
 
 lab_path = (HERE / pkg_json["jupyterlab"]["outputDir"])
 

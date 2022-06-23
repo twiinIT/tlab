@@ -6,7 +6,7 @@ import { IDataModel } from './model';
 import { TLabStore } from './store';
 
 export const ITLabStoreManager = new Token<ITLabStoreManager>(
-  'twiinit_lab:ITLabStoreManager'
+  'tlab:ITLabStoreManager'
 );
 
 type IKernelStoreHandlerFactory = (

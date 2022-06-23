@@ -10,11 +10,11 @@ import { ITLabFront, TLabFront } from './front';
 import { TLabShellWidget } from './widget';
 
 namespace CommandIDs {
-  export const open = 'twiinit_lab:open';
+  export const open = 'tlab:open';
 }
 
 export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
-  id: 'twiinit_lab:front',
+  id: 'tlab:front',
   autoStart: true,
   requires: [ITLabStoreManager, ILabShell],
   optional: [ICommandPalette, ILauncher],

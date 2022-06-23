@@ -2,7 +2,7 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Token } from '@lumino/coreutils';
 import { TLabStore } from '../store/store';
 
-export const ITLabFront = new Token<ITLabFront>('twiinit_lab:ITLabFront');
+export const ITLabFront = new Token<ITLabFront>('tlab:ITLabFront');
 
 export interface ITLabFront {
   widgets: IterableIterator<ITLabWidget>;

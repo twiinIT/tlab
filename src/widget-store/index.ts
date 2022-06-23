@@ -6,7 +6,7 @@ import { ITLabFront } from '../front/front';
 import { StoreWidget } from './widget';
 
 export const labWidgetStorePlugin: JupyterFrontEndPlugin<void> = {
-  id: 'twiinit_lab:widget_store',
+  id: 'tlab:widget_store',
   autoStart: true,
   requires: [ITLabFront],
   activate: (app: JupyterFrontEnd, front: ITLabFront) => {

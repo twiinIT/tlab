@@ -1,10 +1,10 @@
-# a mybinder.org-ready environment for demoing twiinit_lab
+# a mybinder.org-ready environment for demoing tlab
 # this environment may also be used locally on Linux/MacOS/Windows, e.g.
 #
 #   conda env update --file binder/environment.yml
-#   conda activate twiinit-lab-demo
+#   conda activate tlab-demo
 #
-name: twiinit-lab-demo
+name: tlab-demo
 
 channels:
   - conda-forge

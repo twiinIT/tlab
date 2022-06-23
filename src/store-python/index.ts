@@ -7,7 +7,7 @@ import { ITLabPyDSManager, TLabPyDSManager } from './datasource';
 import { PythonKernelStoreHandler } from './handler';
 
 export const labStorePythonPlugin: JupyterFrontEndPlugin<ITLabPyDSManager> = {
-  id: 'twiinit_lab:store_python',
+  id: 'tlab:store_python',
   autoStart: true,
   requires: [ITLabStoreManager],
   provides: ITLabPyDSManager,

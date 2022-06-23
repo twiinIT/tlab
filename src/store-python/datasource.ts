@@ -8,7 +8,7 @@ export interface IPyDataSource {
 }
 
 export const ITLabPyDSManager = new Token<ITLabPyDSManager>(
-  'twiinit_lab:ITLabPyDSManager'
+  'tlab:ITLabPyDSManager'
 );
 
 export interface ITLabPyDSManager {

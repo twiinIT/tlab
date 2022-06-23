@@ -5,7 +5,7 @@ import {
 import { ITLabStoreManager, TLabStoreManager } from './manager';
 
 export const labStoreManagerPlugin: JupyterFrontEndPlugin<ITLabStoreManager> = {
-  id: 'twiinit_lab:store_manager',
+  id: 'tlab:store_manager',
   autoStart: true,
   provides: ITLabStoreManager,
   activate: (app: JupyterFrontEnd) => {

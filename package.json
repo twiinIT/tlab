@@ -1,5 +1,5 @@
 {
-  "name": "twiinit_lab",
+  "name": "tlab",
   "version": "0.1.0",
   "description": "twiinIT Lab",
   "keywords": [
@@ -7,9 +7,9 @@
     "jupyterlab",
     "jupyterlab-extension"
   ],
-  "homepage": "https://github.com/twiinIT/twiinit_lab",
+  "homepage": "https://github.com/twiinIT/tlab",
   "bugs": {
-    "url": "https://github.com/twiinIT/twiinit_lab/issues"
+    "url": "https://github.com/twiinIT/tlab/issues"
   },
   "license": "BSD-3-Clause",
   "author": {
@@ -25,7 +25,7 @@
   "style": "style/index.css",
   "repository": {
     "type": "git",
-    "url": "https://github.com/twiinIT/twiinit_lab.git"
+    "url": "https://github.com/twiinIT/tlab.git"
   },
   "scripts": {
     "build": "jlpm build:lib && jlpm build:labextension:dev",
@@ -36,7 +36,7 @@
     "clean": "jlpm clean:lib",
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
     "clean:lintcache": "rimraf .eslintcache .stylelintcache",
-    "clean:labextension": "rimraf twiinit_lab/labextension",
+    "clean:labextension": "rimraf tlab/labextension",
     "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
     "eslint": "jlpm eslint:check --fix",
     "eslint:check": "eslint . --cache --ext .ts,.tsx",
@@ -91,7 +91,7 @@
   },
   "jupyterlab": {
     "extension": true,
-    "outputDir": "twiinit_lab/labextension"
+    "outputDir": "tlab/labextension"
   },
   "jupyter-releaser": {
     "hooks": {

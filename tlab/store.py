@@ -29,7 +29,7 @@ def on(name: str):
 
 class TLabKernelStore:
 
-    def __init__(self, target='twiinit_lab'):
+    def __init__(self, target='tlab'):
         self.init_comm(target)
 
     def init_comm(self, target):

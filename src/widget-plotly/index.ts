@@ -5,7 +5,7 @@ import {
 import { ITLabFront } from '../front/front';
 
 export const labWidgetPlotlyPlugin: JupyterFrontEndPlugin<void> = {
-  id: 'twiinit_lab:widget_plotly',
+  id: 'tlab:widget_plotly',
   autoStart: true,
   requires: [ITLabFront],
   activate: (app: JupyterFrontEnd, front: ITLabFront) => {

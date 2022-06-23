@@ -8,7 +8,7 @@ import { arrowPythonDS } from './python';
 import { arrowModel } from './model';
 
 export const labApacheArrowPlugin: JupyterFrontEndPlugin<void> = {
-  id: 'twiinit_lab:ds_python_builtins',
+  id: 'tlab:ds_python_builtins',
   autoStart: true,
   requires: [ITLabStoreManager, ITLabPyDSManager],
   activate: (
