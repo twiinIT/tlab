@@ -1,19 +1,45 @@
 import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { JSONValue, PromiseDelegate } from '@lumino/coreutils';
+import { JSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
+import { ITLabPyDSManager } from './datasource';
 
-type EventHandler = (v: JSONValue) => void;
+interface ICommMsgMeta {
+  name: string;
+  req_id?: string;
+}
+
+type EventHandler = (v: KernelMessage.ICommMsgMsg) => void;
+
+/**
+ * Add a handler for an eventName.
+ * @param name name of the event
+ * @returns decorator
+ */
+function on(name: string): MethodDecorator {
+  return (
+    target: any,
+    propertyKey: string | symbol,
+    descriptor: PropertyDescriptor
+  ) => {
+    PythonKernelStoreHandler.handlers.set(name, descriptor.value);
+  };
+}
 
 export class PythonKernelStoreHandler implements IKernelStoreHandler {
-  private static handlers: Map<string, EventHandler> = new Map();
+  static handlers: Map<string, EventHandler> = new Map();
   private _ready: PromiseDelegate<void>;
   private comm: Kernel.IComm;
+  private cmdPromises: Map<string, PromiseDelegate<KernelMessage.ICommMsgMsg>>;
 
-  constructor(private kernel: Kernel.IKernelConnection) {
+  constructor(
+    private kernel: Kernel.IKernelConnection,
+    private dsManager: ITLabPyDSManager
+  ) {
     this._ready = new PromiseDelegate();
     this.comm = this.kernel.createComm('twiinit_lab');
     this.comm.onMsg = this.onCommMsg.bind(this);
-    this.initComm();
+    this.cmdPromises = new Map();
+    this.initKernel();
   }
 
   get ready(): Promise<void> {
@@ -23,15 +49,24 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
   /**
    * https://jupyter-notebook.readthedocs.io/en/stable/comms.html#opening-a-comm-from-the-frontend
    */
-  private async initComm() {
-    // register the target in the kernel
+  private async initKernel() {
+    // create KernelStore and register the comm target in the kernel
     const code = `
-    from twiinit_lab.store import TLabCommHandler
-    __tlab_comm_handler = TLabCommHandler('twiinit_lab')
+    from twiinit_lab.store import TLabKernelStore
+    __tlab_kernel_store = TLabKernelStore('twiinit_lab')
     `;
     await this.kernel.requestExecute({ code }).done;
+
+    // ready
+    const req_id = UUID.uuid4();
+    const metadata = { name: 'syn', req_id };
+    const promise = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
+    promise.promise.then(() => this._ready.resolve());
+    this.cmdPromises.set(req_id, promise);
+
     // open the comm from the front
-    await this.comm.open({ name: 'syn' }).done;
+    this.comm.open(undefined, metadata).done;
+    return this.ready;
   }
 
   /**
@@ -40,36 +75,56 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    */
   private onCommMsg(msg: KernelMessage.ICommMsgMsg) {
     console.log(msg);
-    const name = msg.content.data.name?.toString();
-    const value = msg.content.data.value;
-    if (name) {
-      const handler = PythonKernelStoreHandler.handlers.get(name);
-      handler?.call(this, value);
+    const { name, req_id } = msg.metadata as unknown as ICommMsgMeta;
+    switch (name) {
+      case 'reply': {
+        if (!req_id) {
+          throw new Error('no req_id');
+        }
+        const promise = this.cmdPromises.get(req_id);
+        promise?.resolve(msg);
+        this.cmdPromises.delete(req_id);
+        break;
+      }
+
+      case 'error': {
+        if (req_id) {
+          const promise = this.cmdPromises.get(req_id);
+          promise?.reject(msg);
+          this.cmdPromises.delete(req_id);
+        } else {
+          throw new Error(msg.content.data.toString());
+        }
+        break;
+      }
+
+      default: {
+        const handler = PythonKernelStoreHandler.handlers.get(name);
+        handler?.call(this, msg);
+        break;
+      }
     }
   }
 
   /**
-   * Add a handler for an eventName.
-   * @param name name of the event
-   * @returns decorator
+   * Send command to comm and wait for reply. Use uuid and promises.
+   * @param name of the event
+   * @param data payload to send
    */
-  private static on(name: string): MethodDecorator {
-    return (
-      target: any,
-      propertyKey: string | symbol,
-      descriptor: PropertyDescriptor
-    ) => {
-      PythonKernelStoreHandler.handlers.set(name, descriptor.value);
-    };
+  private async command(
+    name: string,
+    data: any
+  ): Promise<KernelMessage.ICommMsgMsg> {
+    const req_id = UUID.uuid4();
+    const promise = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
+    this.cmdPromises.set(req_id, promise);
+    const meta: ICommMsgMeta = { name, req_id };
+    await this.comm.send(data, meta as unknown as JSONObject).done;
+    return promise.promise;
   }
 
-  @PythonKernelStoreHandler.on('ack')
-  private onAck(value: JSONValue) {
-    this._ready.resolve();
-  }
-
-  @PythonKernelStoreHandler.on('error')
-  private onError(value: JSONValue) {
-    throw new Error(value?.toString());
+  async request(name: string): Promise<any> {
+    const data = await this.command('request', name);
+    return data;
   }
 }

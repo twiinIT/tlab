@@ -18,6 +18,7 @@
     "strictNullChecks": true,
     "target": "es2017",
     "types": ["jest"],
+    "skipLibCheck": true,
     "experimentalDecorators": true
   },
   "include": ["src"]

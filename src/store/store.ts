@@ -41,4 +41,9 @@ export class TLabStore {
     await this.kernelStoreHandler.ready;
     console.log('KernelStore ready');
   }
+
+  async addToStore(name: string): Promise<void> {
+    const model = await this.kernelStoreHandler?.request(name);
+    console.log(model);
+  }
 }

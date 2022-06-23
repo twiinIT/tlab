@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ITLabWidgetProps } from '../front/front';
 
 export function StoreWidget({
@@ -6,14 +6,31 @@ export function StoreWidget({
   front,
   store
 }: ITLabWidgetProps): JSX.Element {
-  const handleKernelConnect = useCallback(() => {
+  const [name, setName] = useState('');
+
+  const handleKernelConnect = () => {
     store.connect();
-  }, [store]);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log(store);
+    store.addToStore(name);
+  };
 
   return (
     <div>
       <div>Store Widget</div>
       <button onClick={handleKernelConnect}>Connect kernel</button>
+
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+        />
+        <input type="submit" />
+      </form>
     </div>
   );
 }
