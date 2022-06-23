@@ -2,8 +2,10 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONValue, PromiseDelegate } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
 
+type EventHandler = (v: JSONValue) => void;
+
 export class PythonKernelStoreHandler implements IKernelStoreHandler {
-  private static handlers: Map<string, (v: JSONValue) => void> = new Map();
+  private static handlers: Map<string, EventHandler> = new Map();
   private _ready: PromiseDelegate<void>;
   private comm: Kernel.IComm;
 
@@ -23,6 +25,10 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    */
   private async initComm() {
     // register the target in the kernel
+    const code = `
+    from twiinit_lab.store import TLabCommHandler
+    __tlab_comm_handler = TLabCommHandler('twiinit_lab')
+    `;
     await this.kernel.requestExecute({ code }).done;
     // open the comm from the front
     await this.comm.open({ name: 'syn' }).done;
@@ -47,13 +53,13 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    * @param name name of the event
    * @returns decorator
    */
-  private static on(name: string) {
+  private static on(name: string): MethodDecorator {
     return (
       target: any,
-      propertyKey: string,
+      propertyKey: string | symbol,
       descriptor: PropertyDescriptor
     ) => {
-      this.handlers.set(name, descriptor.value);
+      PythonKernelStoreHandler.handlers.set(name, descriptor.value);
     };
   }
 
@@ -67,33 +73,3 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     throw new Error(value?.toString());
   }
 }
-
-const code = `
-def target_func(comm, open_msg):
-    handlers = {}
-
-    @comm.on_msg
-    def _recv(msg):
-        name = msg['content']['data'].get('name', None)
-        value = msg['content']['data'].get('value', None)
-        handler = handlers.get(name, None)
-        if handler is None:
-            print('No handler for:', msg)
-            return
-        try:
-            handler(value)
-        except Exception as e:
-            comm.send({'name': 'error', 'value': str(e)})
-
-    def on(name):
-        def decorator(func):
-            handlers[name] = func
-            return func
-        return decorator
-
-    if open_msg['content']['data'].get('name', None) == 'syn':
-        comm.send({'name': 'ack'})
-
-
-get_ipython().kernel.comm_manager.register_target('twiinit_lab', target_func)
-`;
