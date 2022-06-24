@@ -13,13 +13,13 @@ import { danfoModel } from './model';
 export const labDanfoPlugin: JupyterFrontEndPlugin<void> = {
   id: 'tlab:danfo',
   autoStart: true,
-  requires: [ITLabStoreManager, ITLabPyDSManager],
+  optional: [ITLabStoreManager, ITLabPyDSManager],
   activate: (
     app: JupyterFrontEnd,
-    storeManager: ITLabStoreManager,
-    pyDSManager: ITLabPyDSManager
+    storeManager?: ITLabStoreManager,
+    pyDSManager?: ITLabPyDSManager
   ) => {
-    storeManager.registerModel(danfoModel);
-    pyDSManager.register(danfoPythonDS);
+    storeManager?.registerModel(danfoModel);
+    pyDSManager?.register(danfoPythonDS);
   }
 };
