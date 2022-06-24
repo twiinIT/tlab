@@ -1,3 +1,6 @@
+# Copyright (C) 2022, twiinIT
+# SPDX-License-Identifier: BSD-3-Clause
+
 """Server configuration for integration tests.
 
 !! Never use this configuration in production because it

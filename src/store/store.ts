@@ -1,3 +1,6 @@
+// Copyright (C) 2022, twiinIT
+// SPDX-License-Identifier: BSD-3-Clause
+
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
 import { Kernel } from '@jupyterlab/services';

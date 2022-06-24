@@ -1,3 +1,6 @@
+// Copyright (C) 2022, twiinIT
+// SPDX-License-Identifier: BSD-3-Clause
+
 import { labApacheArrowPlugin } from './apache-arrow';
 import { labFrontPlugin } from './front';
 import { labStoreManagerPlugin } from './store';

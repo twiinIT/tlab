@@ -1,3 +1,6 @@
+// Copyright (C) 2022, twiinIT
+// SPDX-License-Identifier: BSD-3-Clause
+
 import React, { useCallback, useState } from 'react';
 import { ITLabWidgetProps } from '../front/front';
 

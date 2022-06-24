@@ -1,3 +1,6 @@
+# Copyright (C) 2022, twiinIT
+# SPDX-License-Identifier: BSD-3-Clause
+
 import pyarrow as pa
 
 table = pa.Table.from_pydict({'x': [1, 2, 3, 4, 5], 'y': [10, 20, 30, 40, 50]})

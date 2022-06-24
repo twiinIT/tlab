@@ -1,3 +1,6 @@
+// Copyright (C) 2022, twiinIT
+// SPDX-License-Identifier: BSD-3-Clause
+
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
