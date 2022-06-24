@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import pandas as pd
-import numpy as np
 
-df = pd.DataFrame(
+from tlab.datasource import DataSource
+
+foodf = pd.DataFrame(
     {
         "A": ["A0", "A1", "A2", "A3"],
         "B": ["B0", "B1", "B2", "B3"],
@@ -13,3 +14,14 @@ df = pd.DataFrame(
     },
     index=['zero', 'one', 'two', 'three'],
 )
+
+
+class DanfoDataSource(DataSource):
+    input_classes: tuple[type] = (pd.DataFrame,)
+
+    @classmethod
+    def serialize(cls, df: pd.DataFrame):
+        return {
+            'records': df.to_json(orient='records'),
+            'index': list(df.index)
+        }, 'danfo'

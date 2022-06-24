@@ -2,13 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import { Token } from '@lumino/coreutils';
-import { IDataModel } from '../store/model';
-
-export interface IPyDataSource {
-  id: string;
-  script: string;
-  provides: IDataModel<any>[];
-}
 
 export const ITLabPyDSManager = new Token<ITLabPyDSManager>(
   'tlab:ITLabPyDSManager'
@@ -17,6 +10,12 @@ export const ITLabPyDSManager = new Token<ITLabPyDSManager>(
 export interface ITLabPyDSManager {
   dataSources: IterableIterator<IPyDataSource>;
   register(ds: IPyDataSource): void;
+}
+
+export interface IPyDataSource {
+  id: string;
+  module: string;
+  class: string;
 }
 
 export class TLabPyDSManager implements ITLabPyDSManager {

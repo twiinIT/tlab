@@ -68,7 +68,8 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     this.cmdPromises.set(req_id, promise);
 
     // open the comm from the front
-    this.comm.open(undefined, metadata).done;
+    const dss = JSON.stringify([...this.dsManager.dataSources]);
+    this.comm.open(dss, metadata);
     return this.ready;
   }
 

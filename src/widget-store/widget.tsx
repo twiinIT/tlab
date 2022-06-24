@@ -1,7 +1,7 @@
 // Copyright (C) 2022, twiinIT
 // SPDX-License-Identifier: BSD-3-Clause
 
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { ITLabWidgetProps } from '../front/front';
 
 export function StoreWidget({
@@ -15,8 +15,19 @@ export function StoreWidget({
     <div>
       <div>Store Widget</div>
       <button onClick={() => store.connect()}>Connect kernel</button>
-      <input type="text" value={name} onChange={e => setName(e.target.value)} />
-      <input type="submit" onClick={() => store.fetch(name)} />
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          store.fetch(name);
+        }}
+      >
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+        />
+        <input type="submit" />
+      </form>
     </div>
   );
 }

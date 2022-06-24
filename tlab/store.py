@@ -1,14 +1,18 @@
 # Copyright (C) 2022, twiinIT
 # SPDX-License-Identifier: BSD-3-Clause
 
+import importlib
+import json
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from .danfo import df
+from tlab.danfo import foodf
 
 if TYPE_CHECKING:
     from ipykernel.comm import Comm
     from IPython import get_ipython
+
+    from tlab.datasource import DataSource
 
 
 # Pydantic?
@@ -31,6 +35,7 @@ def on(name: str):
 
 
 class TLabKernelStore:
+    datasources: dict[type, 'DataSource'] = {}
 
     def __init__(self, target='tlab'):
         self.init_comm(target)
@@ -43,6 +48,12 @@ class TLabKernelStore:
         comm.on_msg(self.on_msg)
         meta = CommMsgMeta(**open_msg['metadata'])
         if meta.name == 'syn':
+            dss = json.loads(open_msg['content']['data'])
+            for ds in dss:
+                module = importlib.import_module(ds['module'])
+                ds_cls: 'DataSource' = getattr(module, ds['class'])
+                for cls in ds_cls.input_classes:
+                    self.datasources[cls] = ds_cls
             new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
             comm.send(None, asdict(new_meta))
 
@@ -57,13 +68,10 @@ class TLabKernelStore:
 
     @on('get')
     def get(self, msg):
+        var_name = msg['content']['data']
+        var = globals()[var_name]
+        ds = self.datasources[type(var)]
+        obj, model_id = ds.serialize(var)
         meta = CommMsgMeta(**msg['metadata'])
         new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
-        self.comm.send(
-            {
-                'obj': {
-                    'records': df.to_json(orient='records'),
-                    'index': list(df.index)
-                },
-                'modelId': 'danfo'
-            }, asdict(new_meta))
+        self.comm.send({'obj': obj, 'modelId': model_id}, asdict(new_meta))
