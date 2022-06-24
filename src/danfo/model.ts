@@ -7,5 +7,8 @@ import { IDataModel } from '../store/model';
 export const danfoModel: IDataModel<DataFrame> = {
   id: 'danfo',
   name: 'Danfo.js',
-  deserialize: async data => new DataFrame(data)
+  deserialize: obj => {
+    const { records, index } = obj;
+    return new DataFrame(JSON.parse(records), { index });
+  }
 };

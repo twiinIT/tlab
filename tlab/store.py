@@ -59,7 +59,11 @@ class TLabKernelStore:
     def get(self, msg):
         meta = CommMsgMeta(**msg['metadata'])
         new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
-        self.comm.send({
-            'obj': df.to_json(),
-            'modelId': 'danfo'
-        }, asdict(new_meta))
+        self.comm.send(
+            {
+                'obj': {
+                    'records': df.to_json(orient='records'),
+                    'index': list(df.index)
+                },
+                'modelId': 'danfo'
+            }, asdict(new_meta))
