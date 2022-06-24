@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import { IPyDataSource } from '../store-python/datasource';
-import { arrowModel } from './model';
+import { danfoModel } from './model';
 
-export const arrowPythonDS: IPyDataSource = {
-  id: 'apache_arrow',
+export const danfoPythonDS: IPyDataSource = {
+  id: 'danfo',
   script: '',
-  provides: [arrowModel]
+  provides: [danfoModel]
 };

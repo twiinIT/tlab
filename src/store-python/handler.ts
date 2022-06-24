@@ -126,8 +126,8 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     return promise.promise;
   }
 
-  async request(name: string): Promise<any> {
-    const data = await this.command('request', name);
-    return data;
+  async fetch(name: string): Promise<{ obj: any; modelId: string }> {
+    const data = await this.command('get', name);
+    return data.content.data as { obj: any; modelId: string };
   }
 }

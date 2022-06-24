@@ -26,6 +26,7 @@ export interface ITLabStoreManager {
   getKernelStoreHandler(
     kernel: Kernel.IKernelConnection
   ): Promise<IKernelStoreHandler>;
+  deserialize(obj: any, type: string): Promise<any>;
 }
 
 export class TLabStoreManager implements ITLabStoreManager {
@@ -69,5 +70,13 @@ export class TLabStoreManager implements ITLabStoreManager {
       this.kernelStoreHandlers.set(kernel.id, handler);
     }
     return handler;
+  }
+
+  async deserialize(obj: unknown, type: string): Promise<any> {
+    const model = this.dataModels.get(type);
+    if (!model) {
+      throw new Error('Model not registered');
+    }
+    return await model.deserialize(obj);
   }
 }

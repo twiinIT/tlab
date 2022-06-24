@@ -3,13 +3,12 @@
 
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
-import { Kernel } from '@jupyterlab/services';
 import { IKernelStoreHandler } from './handler';
 import { ITLabStoreManager } from './manager';
 
 export class TLabStore {
-  sessionContext: SessionContext;
-  kernelStoreHandler: IKernelStoreHandler | undefined;
+  private sessionContext: SessionContext;
+  private _kernelStoreHandler: IKernelStoreHandler | undefined;
 
   constructor(
     private app: JupyterFrontEnd,
@@ -23,12 +22,12 @@ export class TLabStore {
     });
   }
 
-  get kernel(): Kernel.IKernelConnection {
-    const kernel = this.sessionContext.session?.kernel;
-    if (!kernel) {
-      throw new Error("Store doesn't have a kernel");
+  private get kernelStoreHandler() {
+    const ksh = this._kernelStoreHandler;
+    if (!ksh) {
+      throw new Error('No kernel store handler');
     }
-    return kernel;
+    return ksh;
   }
 
   async connect(): Promise<void> {
@@ -38,15 +37,19 @@ export class TLabStore {
       await sessionContextDialogs.selectKernel(this.sessionContext);
     }
     // Connect store to the kernel
-    this.kernelStoreHandler = await this.manager.getKernelStoreHandler(
-      this.kernel
-    );
-    await this.kernelStoreHandler.ready;
-    console.log('KernelStore ready');
+    const kernel = this.sessionContext.session?.kernel;
+    if (kernel) {
+      this._kernelStoreHandler = await this.manager.getKernelStoreHandler(
+        kernel
+      );
+      await this._kernelStoreHandler.ready;
+      console.log('KernelStore ready');
+    }
   }
 
-  async addToStore(name: string): Promise<void> {
-    const model = await this.kernelStoreHandler?.request(name);
+  async fetch(name: string): Promise<void> {
+    const { obj, modelId } = await this.kernelStoreHandler.fetch(name);
+    const model = await this.manager.deserialize(obj, modelId);
     console.log(model);
   }
 }

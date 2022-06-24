@@ -11,29 +11,12 @@ export function StoreWidget({
 }: ITLabWidgetProps): JSX.Element {
   const [name, setName] = useState('');
 
-  const handleKernelConnect = () => {
-    store.connect();
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log(store);
-    store.addToStore(name);
-  };
-
   return (
     <div>
       <div>Store Widget</div>
-      <button onClick={handleKernelConnect}>Connect kernel</button>
-
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-        />
-        <input type="submit" />
-      </form>
+      <button onClick={() => store.connect()}>Connect kernel</button>
+      <input type="text" value={name} onChange={e => setName(e.target.value)} />
+      <input type="submit" onClick={() => store.fetch(name)} />
     </div>
   );
 }

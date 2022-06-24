@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Callable, Literal, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from .arrow import data as testdata
+from .danfo import df
 
 if TYPE_CHECKING:
     from ipykernel.comm import Comm
@@ -55,9 +55,11 @@ class TLabKernelStore:
             new_meta = CommMsgMeta(name='error', req_id=meta.req_id)
             self.comm.send(str(e), asdict(new_meta))
 
-    @on('request')
-    def request(self, msg):
-        data = testdata
+    @on('get')
+    def get(self, msg):
         meta = CommMsgMeta(**msg['metadata'])
         new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
-        self.comm.send(data, asdict(new_meta))
+        self.comm.send({
+            'obj': df.to_json(),
+            'modelId': 'danfo'
+        }, asdict(new_meta))

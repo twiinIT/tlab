@@ -7,11 +7,11 @@ import {
 } from '@jupyterlab/application';
 import { ITLabPyDSManager } from '../store-python/datasource';
 import { ITLabStoreManager } from '../store/manager';
-import { arrowPythonDS } from './python';
-import { arrowModel } from './model';
+import { danfoPythonDS } from './python';
+import { danfoModel } from './model';
 
-export const labApacheArrowPlugin: JupyterFrontEndPlugin<void> = {
-  id: 'tlab:ds_python_builtins',
+export const labDanfoPlugin: JupyterFrontEndPlugin<void> = {
+  id: 'tlab:danfo',
   autoStart: true,
   requires: [ITLabStoreManager, ITLabPyDSManager],
   activate: (
@@ -19,7 +19,7 @@ export const labApacheArrowPlugin: JupyterFrontEndPlugin<void> = {
     storeManager: ITLabStoreManager,
     pyDSManager: ITLabPyDSManager
   ) => {
-    storeManager.registerModel(arrowModel);
-    pyDSManager.register(arrowPythonDS);
+    storeManager.registerModel(danfoModel);
+    pyDSManager.register(danfoPythonDS);
   }
 };

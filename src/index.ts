@@ -1,7 +1,7 @@
 // Copyright (C) 2022, twiinIT
 // SPDX-License-Identifier: BSD-3-Clause
 
-import { labApacheArrowPlugin } from './apache-arrow';
+import { labDanfoPlugin } from './danfo';
 import { labFrontPlugin } from './front';
 import { labStoreManagerPlugin } from './store';
 import { labStorePythonPlugin } from './store-python';
@@ -9,7 +9,7 @@ import { labWidgetPlotlyPlugin } from './widget-plotly';
 import { labWidgetStorePlugin } from './widget-store';
 
 const plugins = [
-  labApacheArrowPlugin,
+  labDanfoPlugin,
   labFrontPlugin,
   labStoreManagerPlugin,
   labStorePythonPlugin,

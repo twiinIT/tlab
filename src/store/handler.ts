@@ -3,5 +3,5 @@
 
 export interface IKernelStoreHandler {
   ready: Promise<void>;
-  request(name: string): any;
+  fetch(name: string): Promise<{ obj: any; modelId: string }>;
 }
