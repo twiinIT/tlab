@@ -7,6 +7,9 @@ import {
 } from '@jupyterlab/application';
 import { ITLabStoreManager, TLabStoreManager } from './manager';
 
+/**
+ * Store manager plugin.
+ */
 export const labStoreManagerPlugin: JupyterFrontEndPlugin<ITLabStoreManager> = {
   id: 'tlab:store_manager',
   autoStart: true,

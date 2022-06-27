@@ -24,4 +24,4 @@ class DanfoDataSource(DataSource):
         return {
             'records': df.to_json(orient='records'),
             'index': list(df.index)
-        }, 'danfo'
+        }, 'danfo_df'

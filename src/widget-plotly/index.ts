@@ -5,13 +5,16 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ITLabFront } from '../front/front';
+import { ITLabFrontManager } from '../front/manager';
 
+/**
+ * Plotly widget plugin.
+ */
 export const labWidgetPlotlyPlugin: JupyterFrontEndPlugin<void> = {
   id: 'tlab:widget_plotly',
   autoStart: true,
-  requires: [ITLabFront],
-  activate: (app: JupyterFrontEnd, front: ITLabFront) => {
+  requires: [ITLabFrontManager],
+  activate: (app: JupyterFrontEnd, manager: ITLabFrontManager) => {
     return;
   }
 };

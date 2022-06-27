@@ -3,6 +3,9 @@
 
 import { IPyDataSource } from '../store-python/datasource';
 
+/**
+ * Danfo.js Python datasource.
+ */
 export const danfoPythonDS: IPyDataSource = {
   id: 'danfo',
   module: 'tlab.danfo',

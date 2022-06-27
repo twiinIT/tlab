@@ -9,6 +9,9 @@ import { ITLabStoreManager } from '../store/manager';
 import { ITLabPyDSManager, TLabPyDSManager } from './datasource';
 import { PythonKernelStoreHandler } from './handler';
 
+/**
+ * Python Store support plugin.
+ */
 export const labStorePythonPlugin: JupyterFrontEndPlugin<ITLabPyDSManager> = {
   id: 'tlab:store_python',
   autoStart: true,

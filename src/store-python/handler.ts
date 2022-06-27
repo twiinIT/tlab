@@ -6,8 +6,18 @@ import { JSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
 import { ITLabPyDSManager } from './datasource';
 
+/**
+ * Comm message metadata format.
+ */
 interface ICommMsgMeta {
+  /**
+   * Event name.
+   */
   name: string;
+
+  /**
+   * Request id.
+   */
   req_id?: string;
 }
 
@@ -15,8 +25,8 @@ type EventHandler = (v: KernelMessage.ICommMsgMsg) => void;
 
 /**
  * Add a handler for an eventName.
- * @param name name of the event
- * @returns decorator
+ * @param name Name of the event.
+ * @returns Decorator
  */
 function on(name: string): MethodDecorator {
   return (
@@ -28,6 +38,9 @@ function on(name: string): MethodDecorator {
   };
 }
 
+/**
+ * Python kernel store handler implementation.
+ */
 export class PythonKernelStoreHandler implements IKernelStoreHandler {
   static handlers: Map<string, EventHandler> = new Map();
   private _ready: PromiseDelegate<void>;
@@ -75,7 +88,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
 
   /**
    * Kernel event handler.
-   * @param msg message from the kernel
+   * @param msg Message from the kernel.
    */
   private onCommMsg(msg: KernelMessage.ICommMsgMsg) {
     console.log(msg);
@@ -112,8 +125,9 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
 
   /**
    * Send command to comm and wait for reply. Use uuid and promises.
-   * @param name of the event
-   * @param data payload to send
+   * @param name Event name.
+   * @param data Payload to send.
+   * @returns Promise of the reply.
    */
   private async command(
     name: string,

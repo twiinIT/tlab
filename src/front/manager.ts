@@ -5,26 +5,61 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Token } from '@lumino/coreutils';
 import { TLabStore } from '../store/store';
 
-export const ITLabFront = new Token<ITLabFront>('tlab:ITLabFront');
+export const ITLabFrontManager = new Token<ITLabFrontManager>(
+  'tlab:ITLabFrontManager'
+);
 
-export interface ITLabFront {
+/**
+ * TLab front manager. Registers widgets and provides access to them.
+ */
+export interface ITLabFrontManager {
+  /**
+   * Available widgets.
+   */
   widgets: IterableIterator<ITLabWidget>;
+
+  /**
+   * Register a widget.
+   * @param widget
+   */
   registerWidget(widget: ITLabWidget): void;
 }
 
+/**
+ * ITLabFrontManager widget interface.
+ */
 export interface ITLabWidget {
+  /**
+   * A human-readable id.
+   */
   id: string;
+
+  /**
+   * Friendly name.
+   */
   name: string;
+
+  /**
+   * Widget component factory.
+   * @param props
+   * @returns React element.
+   */
   component: (props: ITLabWidgetProps) => JSX.Element;
 }
 
+/**
+ * Widget properties.
+ */
 export interface ITLabWidgetProps {
   app: JupyterFrontEnd;
-  front: ITLabFront;
+  manager: ITLabFrontManager;
   store: TLabStore;
 }
 
-export class TLabFront implements ITLabFront {
+/**
+ * ITLabFrontManager implementation.
+ */
+export class TLabFrontManager implements ITLabFrontManager {
   private _widgets: Map<string, ITLabWidget>;
 
   constructor() {

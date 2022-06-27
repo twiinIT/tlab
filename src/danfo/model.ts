@@ -4,9 +4,12 @@
 import { DataFrame } from 'danfojs';
 import { IDataModel } from '../store/model';
 
-export const danfoModel: IDataModel<DataFrame> = {
-  id: 'danfo',
-  name: 'Danfo.js',
+/**
+ * Danfo.js DataFrame data model.
+ */
+export const danfoDFModel: IDataModel<DataFrame> = {
+  id: 'danfo_df',
+  name: 'Danfo.js DataFrame',
   deserialize: obj => {
     const { records, index } = obj;
     return new DataFrame(JSON.parse(records), { index });

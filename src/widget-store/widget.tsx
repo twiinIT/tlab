@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import React, { useState } from 'react';
-import { ITLabWidgetProps } from '../front/front';
+import { ITLabWidgetProps } from '../front/manager';
 
 export function StoreWidget({
   app,
-  front,
+  manager: front,
   store
 }: ITLabWidgetProps): JSX.Element {
   const [name, setName] = useState('');

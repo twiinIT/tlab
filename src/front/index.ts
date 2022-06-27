@@ -9,19 +9,22 @@ import {
 import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { ITLabStoreManager } from '../store/manager';
-import { ITLabFront, TLabFront } from './front';
+import { ITLabFrontManager, TLabFrontManager } from './manager';
 import { TLabShellWidget } from './widget';
 
 namespace CommandIDs {
   export const open = 'tlab:open';
 }
 
-export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
-  id: 'tlab:front',
+/**
+ * Front manager plugin.
+ */
+export const labFrontManagerPlugin: JupyterFrontEndPlugin<ITLabFrontManager> = {
+  id: 'tlab:front_manager',
   autoStart: true,
   requires: [ITLabStoreManager, ILabShell],
   optional: [ICommandPalette, ILauncher],
-  provides: ITLabFront,
+  provides: ITLabFrontManager,
   activate: (
     app: JupyterFrontEnd,
     storeManager: ITLabStoreManager,
@@ -29,7 +32,7 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
     palette?: ICommandPalette,
     launcher?: ILauncher
   ) => {
-    const front = new TLabFront();
+    const frontManager = new TLabFrontManager();
 
     const command = CommandIDs.open;
     const label = 'Open twiinIT Lab';
@@ -38,7 +41,11 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
     app.commands.addCommand(command, {
       label,
       execute: () => {
-        const widget = new TLabShellWidget(app, front, storeManager.newStore());
+        const widget = new TLabShellWidget(
+          app,
+          frontManager,
+          storeManager.newStore()
+        );
         labShell.add(widget, 'main');
       }
     });
@@ -46,6 +53,6 @@ export const labFrontPlugin: JupyterFrontEndPlugin<ITLabFront> = {
     palette?.addItem({ command, category });
     launcher?.add({ command, category });
 
-    return front;
+    return frontManager;
   }
 };

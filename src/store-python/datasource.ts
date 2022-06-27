@@ -7,17 +7,44 @@ export const ITLabPyDSManager = new Token<ITLabPyDSManager>(
   'tlab:ITLabPyDSManager'
 );
 
+/**
+ * Python data source manager.
+ */
 export interface ITLabPyDSManager {
+  /**
+   * Available data sources.
+   */
   dataSources: IterableIterator<IPyDataSource>;
+
+  /**
+   * @param ds
+   */
   register(ds: IPyDataSource): void;
 }
 
+/**
+ * Python data source interface.
+ */
 export interface IPyDataSource {
+  /**
+   * A human-readable id.
+   */
   id: string;
+
+  /**
+   * Module path.
+   */
   module: string;
+
+  /**
+   * Python class name.
+   */
   class: string;
 }
 
+/**
+ * ITLabPyDSManager implementation.
+ */
 export class TLabPyDSManager implements ITLabPyDSManager {
   private _dataSources: Map<string, IPyDataSource>;
 

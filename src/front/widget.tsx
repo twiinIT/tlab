@@ -3,20 +3,23 @@
 
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
+import { listIcon } from '@jupyterlab/ui-components';
+import { UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
-import { listIcon } from '@jupyterlab/ui-components';
 import React from 'react';
-import { UUID } from '@lumino/coreutils';
-import { ITLabFront, ITLabWidgetProps } from './front';
+import { ITLabFrontManager, ITLabWidgetProps } from './manager';
 import { TLabStore } from '../store/store';
 
+/**
+ * TLab Lumino widget wrapping TLab.
+ */
 export class TLabShellWidget extends ReactWidget {
   private signal: ISignal<this, void>;
 
   constructor(
     private app: JupyterFrontEnd,
-    private front: ITLabFront,
+    private manager: ITLabFrontManager,
     private store: TLabStore,
     options?: Widget.IOptions
   ) {
@@ -32,17 +35,19 @@ export class TLabShellWidget extends ReactWidget {
   render(): JSX.Element {
     return (
       <UseSignal signal={this.signal}>
-        {() => <TLab app={this.app} front={this.front} store={this.store} />}
+        {() => (
+          <TLab app={this.app} manager={this.manager} store={this.store} />
+        )}
       </UseSignal>
     );
   }
 }
 
-function TLab({ app, front, store }: ITLabWidgetProps) {
+function TLab({ app, manager, store }: ITLabWidgetProps) {
   return (
     <div>
       <div>twiinIT Lab</div>
-      {[...front.widgets].map(w => w.component({ app, front, store }))}
+      {[...manager.widgets].map(w => w.component({ app, manager, store }))}
     </div>
   );
 }

@@ -2,15 +2,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import { labDanfoPlugin } from './danfo';
-import { labFrontPlugin } from './front';
+import { labFrontManagerPlugin } from './front';
 import { labStoreManagerPlugin } from './store';
 import { labStorePythonPlugin } from './store-python';
 import { labWidgetPlotlyPlugin } from './widget-plotly';
 import { labWidgetStorePlugin } from './widget-store';
 
+/**
+ * Exported extension plugins
+ */
 const plugins = [
   labDanfoPlugin,
-  labFrontPlugin,
+  labFrontManagerPlugin,
   labStoreManagerPlugin,
   labStorePythonPlugin,
   labWidgetPlotlyPlugin,

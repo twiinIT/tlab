@@ -5,11 +5,14 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ITLabPyDSManager } from '../store-python/datasource';
 import { ITLabStoreManager } from '../store/manager';
+import { ITLabPyDSManager } from '../store-python/datasource';
+import { danfoDFModel } from './model';
 import { danfoPythonDS } from './python';
-import { danfoModel } from './model';
 
+/**
+ * Danfo.js support plugin.
+ */
 export const labDanfoPlugin: JupyterFrontEndPlugin<void> = {
   id: 'tlab:danfo',
   autoStart: true,
@@ -19,7 +22,7 @@ export const labDanfoPlugin: JupyterFrontEndPlugin<void> = {
     storeManager?: ITLabStoreManager,
     pyDSManager?: ITLabPyDSManager
   ) => {
-    storeManager?.registerModel(danfoModel);
+    storeManager?.registerModel(danfoDFModel);
     pyDSManager?.register(danfoPythonDS);
   }
 };

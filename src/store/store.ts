@@ -6,6 +6,10 @@ import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
 import { IKernelStoreHandler } from './handler';
 import { ITLabStoreManager } from './manager';
 
+/**
+ * Front TLab store. Exposes kernel variables to the front end widgets
+ * and manage a communication with a kernel store via a handler.
+ */
 export class TLabStore {
   private sessionContext: SessionContext;
   private _kernelStoreHandler: IKernelStoreHandler | undefined;
@@ -14,7 +18,7 @@ export class TLabStore {
     private app: JupyterFrontEnd,
     private manager: ITLabStoreManager
   ) {
-    const serviceManager = this.app.serviceManager;
+    const serviceManager = app.serviceManager;
     this.sessionContext = new SessionContext({
       sessionManager: serviceManager.sessions,
       specsManager: serviceManager.kernelspecs,
@@ -30,6 +34,10 @@ export class TLabStore {
     return ksh;
   }
 
+  /**
+   * Connect store to kernel, obtain kernel store handler
+   * and wait for kernel store to be ready.
+   */
   async connect(): Promise<void> {
     // User kernel selection
     const val = await this.sessionContext.initialize();
@@ -47,6 +55,12 @@ export class TLabStore {
     }
   }
 
+  /**
+   * Fetch a variable from the kernel store.
+   * Its data model should be supported registered in store manager.
+   * @param name Name of the variable in kernel.
+   * @returns Variable promise.
+   */
   async fetch(name: string): Promise<void> {
     const { obj, modelId } = await this.kernelStoreHandler.fetch(name);
     const model = await this.manager.deserialize(obj, modelId);

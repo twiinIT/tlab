@@ -5,15 +5,18 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ITLabFront } from '../front/front';
+import { ITLabFrontManager } from '../front/manager';
 import { StoreWidget } from './widget';
 
+/**
+ * Store controller widget plugin.
+ */
 export const labWidgetStorePlugin: JupyterFrontEndPlugin<void> = {
   id: 'tlab:widget_store',
   autoStart: true,
-  requires: [ITLabFront],
-  activate: (app: JupyterFrontEnd, front: ITLabFront) => {
-    front.registerWidget({
+  requires: [ITLabFrontManager],
+  activate: (app: JupyterFrontEnd, manager: ITLabFrontManager) => {
+    manager.registerWidget({
       id: 'store',
       name: 'Store',
       component: StoreWidget
