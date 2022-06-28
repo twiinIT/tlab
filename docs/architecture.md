@@ -76,23 +76,25 @@ sequenceDiagram
 
 ### Launch
 
+Each twiinIT Lab "view" (`TLabShellWidget`) gets its own `TLabStore` instance.
+
 ```mermaid
 sequenceDiagram
     actor User
     note right of User : Launch
     User ->> JupyterLab : "Open twiinIT Lab"
-    JupyterLab ->> ITLabFront : execute command
-    ITLabFront ->> ITLabStoreManager : newStore()
-    ITLabStoreManager -->> ITLabFront : store
-    ITLabFront ->> TLabShellWidget : create(front, store)
-    TLabShellWidget -->> ITLabFront : widget
-    ITLabFront ->> JupyterLab : add widget to shell
+    JupyterLab ->> ITLabFrontManager : execute command
+    ITLabFrontManager ->> ITLabStoreManager : newStore()
+    ITLabStoreManager -->> ITLabFrontManager : store
+    ITLabFrontManager ->> TLabShellWidget : create(front, store)
+    TLabShellWidget -->> ITLabFrontManager : widget
+    ITLabFrontManager ->> JupyterLab : add widget to shell
     JupyterLab -->> User : twiinIT Lab pane
 ```
 
 ### Store connection
 
-TODO: update
+Each `TLabStore` has a language-specific `IKernelStoreHandler` shared by all stores on the same kernel. `IKernelStoreHandler` is responsible for instantiating the kernel store and establishing a connection with it.
 
 ```mermaid
 sequenceDiagram
@@ -103,21 +105,22 @@ sequenceDiagram
     participant ITLabStoreManager
     participant IKernelStoreHandler
     participant KernelStore
+    participant Datasources
     note right of User : Store conn
-    StoreWidget ->> User : kernel selection
+    TLabStore ->> User : kernel selection
     User -->> TLabStore : kernel choice
     TLabStore ->> ITLabStoreManager : getKernelStoreHandler
     opt instantiate store backend if not present
         ITLabStoreManager ->> IKernelStoreHandler : create
         IKernelStoreHandler ->> JupyterLab : create conn
+        JupyterLab ->> KernelStore : instantiate
+        KernelStore ->> Datasources : add
         IKernelStoreHandler --> KernelStore : conn
     end
     ITLabStoreManager -->> TLabStore : handler
 ```
 
 ### Add variable
-
-TODO: update
 
 ```mermaid
 sequenceDiagram
@@ -126,16 +129,22 @@ sequenceDiagram
     participant TLabStore
     participant IKernelStoreHandler
     participant KernelStore
-    participant DataSource1
-    participant DataSource2
+    participant Kernel
+    participant BarDataSource
     note right of User : Add variables
+    IKernelStoreHandler --> KernelStore : comm
     User ->> KernelStore : "add `foo` to store"
-    KernelStore ->> DataSource1 : get `foo`
-    DataSource1 -->> KernelStore : [foo]
-    KernelStore ->> DataSource2 : get `foo`
-    DataSource2 -->> KernelStore : [ ]
-    KernelStore --> DataSource1 : sync with `foo`
-    KernelStore -->> TLabStore : [foo]
+    KernelStore ->> Kernel : get `foo`
+    Kernel -->> KernelStore : foo, of type bar
+    KernelStore ->> BarDataSource : serialize foo
+    BarDataSource -->> TLabStore : serialized foo, type bar
+```
+
+```mermaid
+sequenceDiagram
+    TLabStore ->> ITLabStoreManager : deserialize foo, type bar
+    ITLabStoreManager ->> BarDataModel : deserialize foo
+    BarDataModel -->> TLabStore : foo in JS data model
 ```
 
 ### Visualization
