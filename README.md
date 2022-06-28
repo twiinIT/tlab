@@ -3,6 +3,12 @@
 [![Github Actions Status](https://github.com/twiinIT/tlab/workflows/Build/badge.svg)](https://github.com/twiinIT/tlab/actions/workflows/build.yml)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/twiinIT/tlab/main?urlpath=lab)
 twiinIT Lab
 
+## Overview
+
+**twiinIT Lab** is a JupyterLab extension that provides modular exploration environments to interact with systems and visualise data.
+
+**This project is yet at an early stage, we welcome your contribution!**
+
 ## Requirements
 
 - JupyterLab >= 3.0
