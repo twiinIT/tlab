@@ -6,8 +6,6 @@ import json
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from tlab.danfo import foodf
-
 if TYPE_CHECKING:
     from ipykernel.comm import Comm
     from IPython import get_ipython
@@ -41,7 +39,8 @@ class TLabKernelStore:
         self.init_comm(target)
 
     def init_comm(self, target):
-        get_ipython().kernel.comm_manager.register_target(target, self.register)
+        self.shell = get_ipython()
+        self.shell.kernel.comm_manager.register_target(target, self.register)
 
     def register(self, comm: 'Comm', open_msg):
         self.comm = comm
@@ -69,7 +68,7 @@ class TLabKernelStore:
     @on('get')
     def get(self, msg):
         var_name = msg['content']['data']
-        var = globals()[var_name]
+        var = self.shell.user_ns[var_name]
         ds = self.datasources[type(var)]
         obj, model_id = ds.serialize(var)
         meta = CommMsgMeta(**msg['metadata'])
