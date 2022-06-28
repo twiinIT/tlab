@@ -37,3 +37,11 @@ class StringDataSource(DataSource):
     @classmethod
     def serialize(cls, value):
         return json.dumps(value), 'string'
+
+
+class ArrayDataSource(DataSource):
+    input_classes: tuple[type] = (list,)
+
+    @classmethod
+    def serialize(cls, value):
+        return json.dumps(value), 'array'

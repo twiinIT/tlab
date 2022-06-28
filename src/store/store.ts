@@ -6,13 +6,20 @@ import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
 import { IKernelStoreHandler } from './handler';
 import { ITLabStoreManager } from './manager';
 
+export interface IStoreObject {
+  name: string;
+  data: any;
+  modelId: string;
+}
+
 /**
  * Front TLab store. Exposes kernel variables to the front end widgets
  * and manage a communication with a kernel store via a handler.
  */
 export class TLabStore {
   private sessionContext: SessionContext;
-  private _kernelStoreHandler: IKernelStoreHandler | undefined;
+  private kernelStoreHandler: IKernelStoreHandler | undefined;
+  private objects: Map<string, IStoreObject>;
 
   constructor(
     private app: JupyterFrontEnd,
@@ -24,14 +31,7 @@ export class TLabStore {
       specsManager: serviceManager.kernelspecs,
       name: 'twiinIT Lab'
     });
-  }
-
-  private get kernelStoreHandler() {
-    const ksh = this._kernelStoreHandler;
-    if (!ksh) {
-      throw new Error('No kernel store handler');
-    }
-    return ksh;
+    this.objects = new Map();
   }
 
   /**
@@ -47,10 +47,10 @@ export class TLabStore {
     // Connect store to the kernel
     const kernel = this.sessionContext.session?.kernel;
     if (kernel) {
-      this._kernelStoreHandler = await this.manager.getKernelStoreHandler(
+      this.kernelStoreHandler = await this.manager.getKernelStoreHandler(
         kernel
       );
-      await this._kernelStoreHandler.ready;
+      await this.kernelStoreHandler.ready;
       console.log('KernelStore ready');
     }
   }
@@ -61,9 +61,19 @@ export class TLabStore {
    * @param name Name of the variable in kernel.
    * @returns Variable promise.
    */
-  async fetch(name: string): Promise<void> {
+  async fetch(name: string): Promise<any> {
+    if (!this.kernelStoreHandler) {
+      throw new Error('Kernel store not connected');
+    }
     const { obj, modelId } = await this.kernelStoreHandler.fetch(name);
-    const model = await this.manager.deserialize(obj, modelId);
-    console.log(model);
+    const model = this.manager.getModel(modelId);
+    if (!model) {
+      throw new Error('Data model not registered');
+    }
+    const parsed = await model.deserialize(obj);
+    const object: IStoreObject = { name, data: parsed, modelId };
+    this.objects.set(name, object);
+    console.log(object);
+    return object;
   }
 }

@@ -27,9 +27,16 @@ const stringModel: IDataModel<string> = {
   deserialize: JSON.parse
 };
 
+const arrayModel: IDataModel<any[]> = {
+  id: 'array',
+  name: 'Array',
+  deserialize: JSON.parse
+};
+
 export const models: IDataModel<any>[] = [
   nullModel,
   booleanModel,
   numberModel,
-  stringModel
+  stringModel,
+  arrayModel
 ];

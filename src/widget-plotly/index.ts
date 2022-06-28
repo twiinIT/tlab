@@ -6,6 +6,7 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { ITLabFrontManager } from '../front/manager';
+import { PlotlyWidget } from './widget';
 
 /**
  * Plotly widget plugin.
@@ -15,6 +16,10 @@ export const labWidgetPlotlyPlugin: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [ITLabFrontManager],
   activate: (app: JupyterFrontEnd, manager: ITLabFrontManager) => {
-    return;
+    manager.registerWidget({
+      id: 'plotly',
+      name: 'Plotly',
+      component: PlotlyWidget
+    });
   }
 };

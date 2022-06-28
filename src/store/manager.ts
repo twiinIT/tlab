@@ -38,6 +38,12 @@ export interface ITLabStoreManager {
   registerModel(model: IDataModel<any>): void;
 
   /**
+   * Get a data model
+   * @param id Model id.
+   */
+  getModel(id: string): IDataModel<any> | undefined;
+
+  /**
    * @returns A new store.
    */
   newStore(): TLabStore;
@@ -50,14 +56,6 @@ export interface ITLabStoreManager {
   getKernelStoreHandler(
     kernel: Kernel.IKernelConnection
   ): Promise<IKernelStoreHandler>;
-
-  /**
-   * Deserialize an object.
-   * @param obj
-   * @param type Data model id.
-   * @returns Deserialized object.
-   */
-  deserialize(obj: any, type: string): Promise<any>;
 }
 
 /**
@@ -85,6 +83,10 @@ export class TLabStoreManager implements ITLabStoreManager {
     this.dataModels.set(model.id, model);
   }
 
+  getModel(id: string): IDataModel<any> | undefined {
+    return this.dataModels.get(id);
+  }
+
   newStore(): TLabStore {
     return new TLabStore(this.app, this);
   }
@@ -104,13 +106,5 @@ export class TLabStoreManager implements ITLabStoreManager {
       this.kernelStoreHandlers.set(kernel.id, handler);
     }
     return handler;
-  }
-
-  async deserialize(obj: unknown, type: string): Promise<any> {
-    const model = this.dataModels.get(type);
-    if (!model) {
-      throw new Error('Model not registered');
-    }
-    return await model.deserialize(obj);
   }
 }

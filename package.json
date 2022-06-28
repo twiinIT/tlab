@@ -56,7 +56,9 @@
   "dependencies": {
     "@jupyterlab/application": "^3.1.0",
     "@jupyterlab/launcher": "^3.4.3",
-    "danfojs": "^1.1.1"
+    "danfojs": "^1.1.1",
+    "plotly.js": "^2.12.1",
+    "react-chart-editor": "^0.45.0"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",

@@ -27,9 +27,16 @@ const stringPythonDS: IPyDataSource = {
   class: 'StringDataSource'
 };
 
+const arrayPythonDS: IPyDataSource = {
+  id: 'primitives_array',
+  module: 'tlab.primitives',
+  class: 'ArrayDataSource'
+};
+
 export const dataSources: IPyDataSource[] = [
   nullPythonDS,
   booleanPythonDS,
   numberPythonDS,
-  stringPythonDS
+  stringPythonDS,
+  arrayPythonDS
 ];
