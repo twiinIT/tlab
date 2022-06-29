@@ -19,18 +19,15 @@ export function PlotlyWidget({
   const [dataSourceOptions, setDataSourceOptions] = useState<any>([]);
 
   useStoreSignal(store, () => {
-    console.log('PlotlyWidget: useStoreSignal');
-
     const _dataSources: any = {};
     for (const obj of store.objects) {
       _dataSources[obj.name] = obj.data;
     }
+    setDataSources(_dataSources);
     const _dataSourceOptions = Object.keys(_dataSources).map(name => ({
       value: name,
       label: name
     }));
-
-    setDataSources(_dataSources);
     setDataSourceOptions(_dataSourceOptions);
   });
 

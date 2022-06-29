@@ -7,7 +7,7 @@ import { IDataModel } from '../store/model';
 /**
  * Danfo.js DataFrame data model.
  */
-export const danfoDFModel: IDataModel<DataFrame> = {
+export const danfoDFModel: IDataModel = {
   id: 'danfo_df',
   name: 'Danfo.js DataFrame',
   deserialize: obj => {

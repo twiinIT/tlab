@@ -4,7 +4,7 @@
 /**
  * TLab data model interface.
  */
-export interface IDataModel<T> {
+export interface IDataModel {
   /**
    * A human-readable id.
    */
@@ -19,5 +19,5 @@ export interface IDataModel<T> {
    * @param obj Serialized object.
    * @returns Deserialized object promise.
    */
-  deserialize: (obj: any) => T | Promise<T>;
+  deserialize: (obj: any) => any | Promise<any>;
 }

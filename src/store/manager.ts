@@ -35,13 +35,13 @@ export interface ITLabStoreManager {
    * Register a data model.
    * @param model
    */
-  registerModel(model: IDataModel<any>): void;
+  registerModel(model: IDataModel): void;
 
   /**
    * Get a data model
    * @param id Model id.
    */
-  getModel(id: string): IDataModel<any> | undefined;
+  getModel(id: string): IDataModel | undefined;
 
   /**
    * @returns A new store.
@@ -64,7 +64,7 @@ export interface ITLabStoreManager {
 export class TLabStoreManager implements ITLabStoreManager {
   private kernelStoreHandlerFactories: Map<string, IKernelStoreHandlerFactory>;
   private kernelStoreHandlers: Map<string, IKernelStoreHandler>;
-  private dataModels: Map<string, IDataModel<any>>;
+  private dataModels: Map<string, IDataModel>;
 
   constructor(private app: JupyterFrontEnd) {
     this.kernelStoreHandlerFactories = new Map();
@@ -79,11 +79,11 @@ export class TLabStoreManager implements ITLabStoreManager {
     this.kernelStoreHandlerFactories.set(language, factory);
   }
 
-  registerModel(model: IDataModel<any>): void {
+  registerModel(model: IDataModel): void {
     this.dataModels.set(model.id, model);
   }
 
-  getModel(id: string): IDataModel<any> | undefined {
+  getModel(id: string): IDataModel | undefined {
     return this.dataModels.get(id);
   }
 
