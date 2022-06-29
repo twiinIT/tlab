@@ -5,8 +5,8 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ITLabStoreManager } from '../store/manager';
 import { ITLabPyDSManager } from '../store-python/datasource';
+import { ITLabStoreManager } from '../store/manager';
 import { danfoDFModel } from './model';
 import { danfoPythonDS } from './python';
 
