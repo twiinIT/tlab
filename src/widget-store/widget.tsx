@@ -4,11 +4,7 @@
 import React, { useState } from 'react';
 import { ITLabWidgetProps } from '../front/manager';
 
-export function StoreWidget({
-  app,
-  manager: front,
-  store
-}: ITLabWidgetProps): JSX.Element {
+export function StoreWidget({ manager, store }: ITLabWidgetProps): JSX.Element {
   const [name, setName] = useState('');
 
   return (
@@ -19,6 +15,7 @@ export function StoreWidget({
         onSubmit={e => {
           e.preventDefault();
           store.fetch(name);
+          setName('');
         }}
       >
         <input

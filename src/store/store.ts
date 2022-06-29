@@ -3,6 +3,8 @@
 
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
+import { Signal } from '@lumino/signaling';
+import { useEffect } from 'react';
 import { IKernelStoreHandler } from './handler';
 import { ITLabStoreManager } from './manager';
 
@@ -19,7 +21,8 @@ export interface IStoreObject {
 export class TLabStore {
   private sessionContext: SessionContext;
   private kernelStoreHandler: IKernelStoreHandler | undefined;
-  private objects: Map<string, IStoreObject>;
+  private _objects: Map<string, IStoreObject>;
+  signal: Signal<this, void>;
 
   constructor(
     private app: JupyterFrontEnd,
@@ -31,7 +34,12 @@ export class TLabStore {
       specsManager: serviceManager.kernelspecs,
       name: 'twiinIT Lab'
     });
-    this.objects = new Map();
+    this._objects = new Map();
+    this.signal = new Signal(this);
+  }
+
+  get objects(): IterableIterator<IStoreObject> {
+    return this._objects.values();
   }
 
   /**
@@ -72,8 +80,26 @@ export class TLabStore {
     }
     const parsed = await model.deserialize(obj);
     const object: IStoreObject = { name, data: parsed, modelId };
-    this.objects.set(name, object);
+    this._objects.set(name, object);
+    this.signal.emit();
     console.log(object);
     return object;
   }
+}
+
+/**
+ * Store signal React hook.
+ * @param store Store to be used.
+ * @param callback
+ */
+export function useStoreSignal(
+  store: TLabStore,
+  callback: (store: TLabStore) => void
+) {
+  useEffect(() => {
+    store.signal.connect(callback);
+    return () => {
+      store.signal.disconnect(callback);
+    };
+  }, [callback, store.signal]);
 }

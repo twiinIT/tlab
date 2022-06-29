@@ -51,7 +51,6 @@ export interface ITLabWidget {
  * Widget properties.
  */
 export interface ITLabWidgetProps {
-  app: JupyterFrontEnd;
   manager: ITLabFrontManager;
   store: TLabStore;
 }
