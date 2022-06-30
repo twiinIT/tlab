@@ -79,7 +79,8 @@ export class TLabStore {
       throw new Error('Data model not registered');
     }
     const parsed = await model.deserialize(obj);
-    const object: IStoreObject = { name, data: parsed, modelId };
+    const wrapped = await this.kernelStoreHandler.wrap(name, modelId, parsed);
+    const object: IStoreObject = { name, data: wrapped, modelId };
     this._objects.set(name, object);
     this.signal.emit();
     console.log(object);

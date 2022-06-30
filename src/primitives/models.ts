@@ -30,7 +30,7 @@ const stringModel: IDataModel = {
 const arrayModel: IDataModel = {
   id: 'array',
   name: 'Array',
-  deserialize: obj => new Proxy(JSON.parse(obj), new ArrayProxyHandler())
+  deserialize: JSON.parse
 };
 
 export const models: IDataModel[] = [
@@ -40,18 +40,3 @@ export const models: IDataModel[] = [
   stringModel,
   arrayModel
 ];
-
-class ArrayProxyHandler implements ProxyHandler<Array<any>> {
-  get(target: Array<any>, p: string | symbol, receiver: any): any {
-    return Reflect.get(target, p, receiver);
-  }
-
-  set(
-    target: Array<any>,
-    p: string | symbol,
-    value: any,
-    receiver: any
-  ): boolean {
-    return Reflect.set(target, p, value, receiver);
-  }
-}

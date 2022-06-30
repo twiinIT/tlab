@@ -37,6 +37,7 @@ class TLabKernelStore:
 
     def __init__(self, target='tlab'):
         self.init_comm(target)
+        self.store: dict[str, Any] = {}
 
     def init_comm(self, target):
         self.shell = get_ipython()
@@ -69,6 +70,7 @@ class TLabKernelStore:
     def get(self, msg):
         var_name = msg['content']['data']
         var = self.shell.user_ns[var_name]
+        self.store[var_name] = var
         ds = self.datasources[type(var)]
         obj, model_id = ds.serialize(var)
         meta = CommMsgMeta(**msg['metadata'])

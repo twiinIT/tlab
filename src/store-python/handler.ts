@@ -129,10 +129,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    * @param data Payload to send.
    * @returns Promise of the reply.
    */
-  private async command(
-    name: string,
-    data: any
-  ): Promise<KernelMessage.ICommMsgMsg> {
+  async command(name: string, data: any): Promise<KernelMessage.ICommMsgMsg> {
     const req_id = UUID.uuid4();
     const promise = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
     this.cmdPromises.set(req_id, promise);
@@ -144,5 +141,56 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
   async fetch(name: string): Promise<{ obj: any; modelId: string }> {
     const data = await this.command('get', name);
     return data.content.data as { obj: any; modelId: string };
+  }
+
+  async wrap(name: string, modelId: string, parsed: any): Promise<any> {
+    let wrapped;
+    switch (modelId) {
+      // Primitives
+      case 'null':
+      case 'boolean':
+      case 'number':
+      case 'string':
+        wrapped = new Proxy(
+          { target: parsed },
+          new PrimitiveProxyHandler(name, this)
+        );
+        break;
+
+      default:
+        wrapped = new Proxy(parsed, new BasicProxyHandler(name, this));
+        break;
+    }
+    return wrapped;
+  }
+}
+
+/**
+ * Proxy handler for primitive types.
+ */
+class PrimitiveProxyHandler implements ProxyHandler<any> {
+  constructor(
+    private name: string,
+    private handler: PythonKernelStoreHandler
+  ) {}
+
+  get(target: any, p: string | symbol, receiver: any): any {
+    const _target = Reflect.get(target, 'target');
+    const value = _target[p];
+    return typeof value === 'function' ? value.bind(_target) : value;
+  }
+}
+
+/**
+ * Basic proxy handler.
+ */
+class BasicProxyHandler implements ProxyHandler<any> {
+  constructor(
+    private name: string,
+    private handler: PythonKernelStoreHandler
+  ) {}
+
+  set(target: any, p: string | symbol, value: any, receiver: any): boolean {
+    return Reflect.set(target, p, value, receiver);
   }
 }
