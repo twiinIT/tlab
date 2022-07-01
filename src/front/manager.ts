@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import { Token } from '@lumino/coreutils';
-import { TLabStore } from '../store/store';
+import { ITLabStore } from '../store/store';
 
 export const ITLabFrontManager = new Token<ITLabFrontManager>(
   'tlab:ITLabFrontManager'
@@ -51,7 +51,7 @@ export interface ITLabWidget {
  */
 export interface ITLabWidgetProps {
   manager: ITLabFrontManager;
-  store: TLabStore;
+  store: ITLabStore;
 }
 
 /**

@@ -18,7 +18,36 @@ export interface IStoreObject {
  * Front TLab store. Exposes kernel variables to the front end widgets
  * and manage a communication with a kernel store via a handler.
  */
-export class TLabStore {
+export interface ITLabStore {
+  /**
+   * Objects in store.
+   */
+  objects: Map<string, IStoreObject>;
+
+  /**
+   * Signal for when an object is modified to the store.
+   */
+  signal: Signal<this, void>;
+
+  /**
+   * Connect store to kernel, obtain kernel store handler
+   * and wait for kernel store to be ready.
+   */
+  connect(): Promise<void>;
+
+  /**
+   * Fetch a variable from the kernel store.
+   * Its data model should be supported registered in store manager.
+   * @param name Name of the variable in kernel.
+   * @returns Variable promise.
+   */
+  fetch(name: string): Promise<any>;
+}
+
+/**
+ * ITLabStore implementation.
+ */
+export class TLabStore implements ITLabStore {
   private sessionContext: SessionContext;
   private kernelStoreHandler: IKernelStoreHandler | undefined;
   objects: Map<string, IStoreObject>;
@@ -38,10 +67,6 @@ export class TLabStore {
     this.signal = new Signal(this);
   }
 
-  /**
-   * Connect store to kernel, obtain kernel store handler
-   * and wait for kernel store to be ready.
-   */
   async connect(): Promise<void> {
     // User kernel selection
     const val = await this.sessionContext.initialize();
@@ -59,12 +84,6 @@ export class TLabStore {
     }
   }
 
-  /**
-   * Fetch a variable from the kernel store.
-   * Its data model should be supported registered in store manager.
-   * @param name Name of the variable in kernel.
-   * @returns Variable promise.
-   */
   async fetch(name: string): Promise<any> {
     if (!this.kernelStoreHandler) {
       throw new Error('Kernel store not connected');
@@ -90,8 +109,8 @@ export class TLabStore {
  * @param callback
  */
 export function useStoreSignal(
-  store: TLabStore,
-  callback: (store: TLabStore) => void
+  store: ITLabStore,
+  callback: (store: ITLabStore) => void
 ) {
   useEffect(() => {
     store.signal.connect(callback);

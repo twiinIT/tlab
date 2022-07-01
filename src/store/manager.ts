@@ -6,7 +6,7 @@ import { Kernel } from '@jupyterlab/services';
 import { Token } from '@lumino/coreutils';
 import { IKernelStoreHandler } from './handler';
 import { IDataModel } from './model';
-import { TLabStore } from './store';
+import { ITLabStore, TLabStore } from './store';
 
 export const ITLabStoreManager = new Token<ITLabStoreManager>(
   'tlab:ITLabStoreManager'
@@ -46,7 +46,7 @@ export interface ITLabStoreManager {
   /**
    * @returns A new store.
    */
-  newStore(): TLabStore;
+  newStore(): ITLabStore;
 
   /**
    * Get a kernel store handler for a kernel connection.
@@ -87,7 +87,7 @@ export class TLabStoreManager implements ITLabStoreManager {
     return this.dataModels.get(id);
   }
 
-  newStore(): TLabStore {
+  newStore(): ITLabStore {
     return new TLabStore(this.app, this);
   }
 

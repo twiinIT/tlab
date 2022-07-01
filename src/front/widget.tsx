@@ -17,7 +17,7 @@ import {
 } from 'flexlayout-react';
 import 'flexlayout-react/style/light.css';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { TLabStore } from '../store/store';
+import { ITLabStore } from '../store/store';
 import { ITLabFrontManager, ITLabWidget, ITLabWidgetProps } from './manager';
 
 /**
@@ -27,7 +27,7 @@ export class TLabShellWidget extends ReactWidget {
   constructor(
     private app: JupyterFrontEnd,
     private manager: ITLabFrontManager,
-    private store: TLabStore,
+    private store: ITLabStore,
     options?: Widget.IOptions
   ) {
     super(options);
