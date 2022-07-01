@@ -1,7 +1,6 @@
 // Copyright (C) 2022, twiinIT
 // SPDX-License-Identifier: BSD-3-Clause
 
-import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Token } from '@lumino/coreutils';
 import { TLabStore } from '../store/store';
 
@@ -16,7 +15,7 @@ export interface ITLabFrontManager {
   /**
    * Available widgets.
    */
-  widgets: IterableIterator<ITLabWidget>;
+  widgets: Map<string, ITLabWidget>;
 
   /**
    * Register a widget.
@@ -59,17 +58,13 @@ export interface ITLabWidgetProps {
  * ITLabFrontManager implementation.
  */
 export class TLabFrontManager implements ITLabFrontManager {
-  private _widgets: Map<string, ITLabWidget>;
+  widgets: Map<string, ITLabWidget>;
 
   constructor() {
-    this._widgets = new Map();
-  }
-
-  get widgets(): IterableIterator<ITLabWidget> {
-    return this._widgets.values();
+    this.widgets = new Map();
   }
 
   registerWidget(widget: ITLabWidget): void {
-    this._widgets.set(widget.id, widget);
+    this.widgets.set(widget.id, widget);
   }
 }

@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import plotly from 'plotly.js/dist/plotly';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PlotlyEditor from 'react-chart-editor';
+import 'react-chart-editor/lib/react-chart-editor.css';
 import { ITLabWidgetProps } from '../front/manager';
 import { useStoreSignal } from '../store/store';
-
-import 'react-chart-editor/lib/react-chart-editor.css';
 
 export function PlotlyWidget({
   manager,
@@ -15,21 +14,25 @@ export function PlotlyWidget({
 }: ITLabWidgetProps): JSX.Element {
   const [state, setState] = useState<any>({ data: [], layout: {}, frames: [] });
   const [config, setConfig] = useState<any>({ editable: true });
-  const [dataSources, setDataSources] = useState<any>({});
-  const [dataSourceOptions, setDataSourceOptions] = useState<any>([]);
+  const [dataSources, setDataSources] = useState<any>();
+  const [dataSourceOptions, setDataSourceOptions] = useState<any>();
 
-  useStoreSignal(store, () => {
+  function updateDataSources() {
     const _dataSources: any = {};
-    for (const obj of store.objects) {
-      _dataSources[obj.name] = obj.data;
-    }
+    store.objects.forEach(val => {
+      _dataSources[val.name] = val.data;
+    });
     setDataSources(_dataSources);
     const _dataSourceOptions = Object.keys(_dataSources).map(name => ({
       value: name,
       label: name
     }));
     setDataSourceOptions(_dataSourceOptions);
-  });
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(updateDataSources, []);
+  useStoreSignal(store, updateDataSources);
 
   return (
     <div>

@@ -14,7 +14,7 @@ export interface ITLabPyDSManager {
   /**
    * Available data sources.
    */
-  dataSources: IterableIterator<IPyDataSource>;
+  dataSources: Map<string, IPyDataSource>;
 
   /**
    * @param ds
@@ -46,17 +46,13 @@ export interface IPyDataSource {
  * ITLabPyDSManager implementation.
  */
 export class TLabPyDSManager implements ITLabPyDSManager {
-  private _dataSources: Map<string, IPyDataSource>;
+  dataSources: Map<string, IPyDataSource>;
 
   constructor() {
-    this._dataSources = new Map();
-  }
-
-  get dataSources(): IterableIterator<IPyDataSource> {
-    return this._dataSources.values();
+    this.dataSources = new Map();
   }
 
   register(ds: IPyDataSource): void {
-    this._dataSources.set(ds.id, ds);
+    this.dataSources.set(ds.id, ds);
   }
 }

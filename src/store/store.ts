@@ -21,7 +21,7 @@ export interface IStoreObject {
 export class TLabStore {
   private sessionContext: SessionContext;
   private kernelStoreHandler: IKernelStoreHandler | undefined;
-  private _objects: Map<string, IStoreObject>;
+  objects: Map<string, IStoreObject>;
   signal: Signal<this, void>;
 
   constructor(
@@ -34,12 +34,8 @@ export class TLabStore {
       specsManager: serviceManager.kernelspecs,
       name: 'twiinIT Lab'
     });
-    this._objects = new Map();
+    this.objects = new Map();
     this.signal = new Signal(this);
-  }
-
-  get objects(): IterableIterator<IStoreObject> {
-    return this._objects.values();
   }
 
   /**
@@ -81,7 +77,7 @@ export class TLabStore {
     const parsed = await model.deserialize(obj);
     const wrapped = await this.kernelStoreHandler.wrap(name, modelId, parsed);
     const object: IStoreObject = { name, data: wrapped, modelId };
-    this._objects.set(name, object);
+    this.objects.set(name, object);
     this.signal.emit();
     console.log(object);
     return object;

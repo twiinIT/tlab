@@ -81,7 +81,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     this.cmdPromises.set(req_id, promise);
 
     // open the comm from the front
-    const dss = JSON.stringify([...this.dsManager.dataSources]);
+    const dss = JSON.stringify([...this.dsManager.dataSources.values()]);
     this.comm.open(dss, metadata);
     return this.ready;
   }
@@ -191,6 +191,10 @@ class BasicProxyHandler implements ProxyHandler<any> {
   ) {}
 
   set(target: any, p: string | symbol, value: any, receiver: any): boolean {
-    return Reflect.set(target, p, value, receiver);
+    const ok = Reflect.set(target, p, value, receiver);
+    if (ok) {
+      this.handler.command('set', { name: this.name, prop: p, value });
+    }
+    return ok;
   }
 }
