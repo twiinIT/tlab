@@ -38,5 +38,6 @@ module.exports = {
     }
   },
   testRegex: 'src/.*/.*.spec.ts[x]?$',
-  transformIgnorePatterns: [`/node_modules/(?!${esModules}).+`]
+  transformIgnorePatterns: [`/node_modules/(?!${esModules}).+`],
+  testEnvironment: 'jsdom'
 };

@@ -53,6 +53,7 @@ export const labFrontManagerPlugin: JupyterFrontEndPlugin<ITLabFrontManager> = {
     palette?.addItem({ command, category });
     launcher?.add({ command, category });
 
+    console.log('JupyterLab extension tlab is activated!');
     return frontManager;
   }
 };

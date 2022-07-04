@@ -58,6 +58,7 @@
     "@jupyterlab/launcher": "^3.4.3",
     "danfojs": "^1.1.1",
     "flexlayout-react": "^0.7.3",
+    "jest-environment-jsdom": "^28.1.2",
     "plotly.js": "^2.12.1",
     "react-chart-editor": "^0.45.0"
   },
