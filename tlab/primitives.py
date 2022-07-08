@@ -2,13 +2,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import json
-from types import NoneType
 
 from tlab.datasource import DataSource
 
 
 class NullDataSource(DataSource):
-    input_classes: tuple[type] = (NoneType,)
+    input_classes: tuple[type] = (type(None),)
 
     @classmethod
     def serialize(cls, value):
