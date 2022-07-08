@@ -11,6 +11,7 @@ twiinIT Lab
 
 ## Requirements
 
+- Python >= 3.9
 - JupyterLab >= 3.0
 
 ## Install
