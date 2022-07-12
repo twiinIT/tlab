@@ -62,28 +62,27 @@ export interface ITLabStoreManager {
  * ITLabStoreManager implementation.
  */
 export class TLabStoreManager implements ITLabStoreManager {
-  private kernelStoreHandlerFactories: Map<string, IKernelStoreHandlerFactory>;
-  private kernelStoreHandlers: Map<string, IKernelStoreHandler>;
-  private dataModels: Map<string, IDataModel>;
+  private kernelStoreHandlerFactories = new Map<
+    string,
+    IKernelStoreHandlerFactory
+  >();
+  private kernelStoreHandlers = new Map<string, IKernelStoreHandler>();
+  private dataModels = new Map<string, IDataModel>();
 
-  constructor(private app: JupyterFrontEnd) {
-    this.kernelStoreHandlerFactories = new Map();
-    this.kernelStoreHandlers = new Map();
-    this.dataModels = new Map();
-  }
+  constructor(private app: JupyterFrontEnd) {}
 
   registerKernelStoreHandler(
     language: string,
     factory: IKernelStoreHandlerFactory
-  ): void {
+  ) {
     this.kernelStoreHandlerFactories.set(language, factory);
   }
 
-  registerModel(model: IDataModel): void {
+  registerModel(model: IDataModel) {
     this.dataModels.set(model.id, model);
   }
 
-  getModel(id: string): IDataModel | undefined {
+  getModel(id: string) {
     return this.dataModels.get(id);
   }
 
@@ -91,9 +90,7 @@ export class TLabStoreManager implements ITLabStoreManager {
     return new TLabStore(this.app, this);
   }
 
-  async getKernelStoreHandler(
-    kernel: Kernel.IKernelConnection
-  ): Promise<IKernelStoreHandler> {
+  async getKernelStoreHandler(kernel: Kernel.IKernelConnection) {
     let handler = this.kernelStoreHandlers.get(kernel.id);
     if (!handler) {
       const infos = await kernel.info;

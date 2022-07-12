@@ -24,41 +24,28 @@ interface ICommMsgMeta {
 type EventHandler = (v: KernelMessage.ICommMsgMsg) => void;
 
 /**
- * Add a handler for an eventName.
- * @param name Name of the event.
- * @returns Decorator
- */
-function on(name: string): MethodDecorator {
-  return (
-    target: any,
-    propertyKey: string | symbol,
-    descriptor: PropertyDescriptor
-  ) => {
-    PythonKernelStoreHandler.handlers.set(name, descriptor.value);
-  };
-}
-
-/**
  * Python kernel store handler implementation.
  */
 export class PythonKernelStoreHandler implements IKernelStoreHandler {
-  static handlers: Map<string, EventHandler> = new Map();
-  private _ready: PromiseDelegate<void>;
-  private comm: Kernel.IComm;
-  private cmdPromises: Map<string, PromiseDelegate<KernelMessage.ICommMsgMsg>>;
+  static handlers = new Map<string, EventHandler>();
+
+  private _ready = new PromiseDelegate<void>();
+  private cmdPromises = new Map<
+    string,
+    PromiseDelegate<KernelMessage.ICommMsgMsg>
+  >();
+  private comm;
 
   constructor(
     private kernel: Kernel.IKernelConnection,
     private dsManager: ITLabPyDSManager
   ) {
-    this._ready = new PromiseDelegate();
     this.comm = this.kernel.createComm('tlab');
     this.comm.onMsg = this.onCommMsg.bind(this);
-    this.cmdPromises = new Map();
     this.initKernel();
   }
 
-  get ready(): Promise<void> {
+  get ready() {
     return this._ready.promise;
   }
 
@@ -129,7 +116,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    * @param data Payload to send.
    * @returns Promise of the reply.
    */
-  async command(name: string, data: any): Promise<KernelMessage.ICommMsgMsg> {
+  async command(name: string, data: any) {
     const req_id = UUID.uuid4();
     const promise = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
     this.cmdPromises.set(req_id, promise);
@@ -138,63 +125,8 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     return promise.promise;
   }
 
-  async fetch(name: string): Promise<{ obj: any; modelId: string }> {
+  async fetch(name: string) {
     const data = await this.command('get', name);
-    return data.content.data as { obj: any; modelId: string };
-  }
-
-  async wrap(name: string, modelId: string, parsed: any): Promise<any> {
-    let wrapped;
-    switch (modelId) {
-      // Primitives
-      case 'null':
-      case 'boolean':
-      case 'number':
-      case 'string':
-        wrapped = new Proxy(
-          { target: parsed },
-          new PrimitiveProxyHandler(name, this)
-        );
-        break;
-
-      default:
-        wrapped = new Proxy(parsed, new BasicProxyHandler(name, this));
-        break;
-    }
-    return wrapped;
-  }
-}
-
-/**
- * Proxy handler for primitive types.
- */
-class PrimitiveProxyHandler implements ProxyHandler<any> {
-  constructor(
-    private name: string,
-    private handler: PythonKernelStoreHandler
-  ) {}
-
-  get(target: any, p: string | symbol, receiver: any): any {
-    const _target = Reflect.get(target, 'target');
-    const value = _target[p];
-    return typeof value === 'function' ? value.bind(_target) : value;
-  }
-}
-
-/**
- * Basic proxy handler.
- */
-class BasicProxyHandler implements ProxyHandler<any> {
-  constructor(
-    private name: string,
-    private handler: PythonKernelStoreHandler
-  ) {}
-
-  set(target: any, p: string | symbol, value: any, receiver: any): boolean {
-    const ok = Reflect.set(target, p, value, receiver);
-    if (ok) {
-      this.handler.command('set', { name: this.name, prop: p, value });
-    }
-    return ok;
+    return data.content.data as { data: any; modelId: string };
   }
 }

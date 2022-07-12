@@ -72,7 +72,7 @@ class TLabKernelStore:
         var = self.shell.user_ns[var_name]
         self.store[var_name] = var
         ds = self.datasources[type(var)]
-        obj, model_id = ds.serialize(var)
+        data, model_id = ds.serialize(var)
         meta = CommMsgMeta(**msg['metadata'])
         new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
-        self.comm.send({'obj': obj, 'modelId': model_id}, asdict(new_meta))
+        self.comm.send({'data': data, 'modelId': model_id}, asdict(new_meta))

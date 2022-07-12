@@ -46,13 +46,9 @@ export interface IPyDataSource {
  * ITLabPyDSManager implementation.
  */
 export class TLabPyDSManager implements ITLabPyDSManager {
-  dataSources: Map<string, IPyDataSource>;
+  dataSources = new Map<string, IPyDataSource>();
 
-  constructor() {
-    this.dataSources = new Map();
-  }
-
-  register(ds: IPyDataSource): void {
+  register(ds: IPyDataSource) {
     this.dataSources.set(ds.id, ds);
   }
 }
