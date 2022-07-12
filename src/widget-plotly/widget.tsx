@@ -17,7 +17,7 @@ export function PlotlyWidget({
   const [dataSources, setDataSources] = useState<any>();
   const [dataSourceOptions, setDataSourceOptions] = useState<any>();
 
-  function updateDataSources() {
+  const updateDataSources = () => {
     const _dataSources: any = {};
     store.objects.forEach(val => {
       _dataSources[val.name] = val.data;
@@ -28,7 +28,7 @@ export function PlotlyWidget({
       label: name
     }));
     setDataSourceOptions(_dataSourceOptions);
-  }
+  };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(updateDataSources, []);

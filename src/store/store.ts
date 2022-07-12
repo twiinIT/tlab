@@ -48,10 +48,11 @@ export interface ITLabStore {
  * ITLabStore implementation.
  */
 export class TLabStore implements ITLabStore {
-  private sessionContext: SessionContext;
-  private kernelStoreHandler: IKernelStoreHandler | undefined;
-  objects: Map<string, IStoreObject>;
-  signal: Signal<this, void>;
+  objects = new Map<string, IStoreObject>();
+  signal = new Signal<this, void>(this);
+
+  private sessionContext;
+  private kernelStoreHandler?: IKernelStoreHandler;
 
   constructor(
     private app: JupyterFrontEnd,
@@ -63,11 +64,9 @@ export class TLabStore implements ITLabStore {
       specsManager: serviceManager.kernelspecs,
       name: 'twiinIT Lab'
     });
-    this.objects = new Map();
-    this.signal = new Signal(this);
   }
 
-  async connect(): Promise<void> {
+  async connect() {
     // User kernel selection
     const val = await this.sessionContext.initialize();
     if (val) {
@@ -84,18 +83,17 @@ export class TLabStore implements ITLabStore {
     }
   }
 
-  async fetch(name: string): Promise<any> {
+  async fetch(name: string) {
     if (!this.kernelStoreHandler) {
       throw new Error('Kernel store not connected');
     }
-    const { obj, modelId } = await this.kernelStoreHandler.fetch(name);
+    const { data, modelId } = await this.kernelStoreHandler.fetch(name);
     const model = this.manager.getModel(modelId);
     if (!model) {
       throw new Error('Data model not registered');
     }
-    const parsed = await model.deserialize(obj);
-    const wrapped = await this.kernelStoreHandler.wrap(name, modelId, parsed);
-    const object: IStoreObject = { name, data: wrapped, modelId };
+    const parsed = await model.deserialize(data);
+    const object: IStoreObject = { name, data: parsed, modelId };
     this.objects.set(name, object);
     this.signal.emit();
     console.log(object);
