@@ -72,7 +72,6 @@ setup_args = dict(
         "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
     ],
     install_requires=[
-        "pandas",
     ],
 )
 
