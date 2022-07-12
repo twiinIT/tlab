@@ -1,16 +1,14 @@
 # Copyright (C) 2022, twiinIT
 # SPDX-License-Identifier: BSD-3-Clause
 
-import importlib
-import json
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional
+
+from .models.model import Widget
 
 if TYPE_CHECKING:
     from ipykernel.comm import Comm
     from IPython import get_ipython
-
-    from tlab.datasource import DataSource
 
 
 # Pydantic?
@@ -33,11 +31,9 @@ def on(name: str):
 
 
 class TLabKernelStore:
-    datasources: dict[type, 'DataSource'] = {}
 
     def __init__(self, target='tlab'):
         self.init_comm(target)
-        self.store: dict[str, Any] = {}
 
     def init_comm(self, target):
         self.shell = get_ipython()
@@ -47,15 +43,8 @@ class TLabKernelStore:
         self.comm = comm
         comm.on_msg(self.on_msg)
         meta = CommMsgMeta(**open_msg['metadata'])
-        if meta.name == 'syn':
-            dss = json.loads(open_msg['content']['data'])
-            for ds in dss:
-                module = importlib.import_module(ds['module'])
-                ds_cls: 'DataSource' = getattr(module, ds['class'])
-                for cls in ds_cls.input_classes:
-                    self.datasources[cls] = ds_cls
-            new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
-            comm.send(None, asdict(new_meta))
+        new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
+        comm.send(None, asdict(new_meta))
 
     def on_msg(self, msg):
         meta = CommMsgMeta(**msg['metadata'])
@@ -69,10 +58,5 @@ class TLabKernelStore:
     @on('get')
     def get(self, msg):
         var_name = msg['content']['data']
-        var = self.shell.user_ns[var_name]
-        self.store[var_name] = var
-        ds = self.datasources[type(var)]
-        data, model_id = ds.serialize(var)
-        meta = CommMsgMeta(**msg['metadata'])
-        new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
-        self.comm.send({'data': data, 'modelId': model_id}, asdict(new_meta))
+        var: Widget = self.shell.user_ns[var_name]
+        var.open(self.comm)

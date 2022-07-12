@@ -6,23 +6,16 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { ITLabStoreManager } from '../store/manager';
-import { ITLabPyDSManager, TLabPyDSManager } from './datasource';
-import { PythonKernelStoreHandler } from './handler';
+import { connector } from './connector';
 
 /**
- * Python Store support plugin.
+ * Python support plugin.
  */
-export const labStorePythonPlugin: JupyterFrontEndPlugin<ITLabPyDSManager> = {
+export const labStorePythonPlugin: JupyterFrontEndPlugin<void> = {
   id: 'tlab:store_python',
   autoStart: true,
   requires: [ITLabStoreManager],
-  provides: ITLabPyDSManager,
   activate: (app: JupyterFrontEnd, storeManager: ITLabStoreManager) => {
-    const dsManager = new TLabPyDSManager();
-    storeManager.registerKernelStoreHandler(
-      'python',
-      k => new PythonKernelStoreHandler(k, dsManager)
-    );
-    return dsManager;
+    storeManager.registerKernelStoreConnector('python', connector);
   }
 };
