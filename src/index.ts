@@ -3,7 +3,6 @@
 
 import { labFrontManagerPlugin } from './front';
 import { labPrimitivesPlugin } from './primitives';
-import { labStorePythonPlugin } from './python';
 import { labStoreManagerPlugin } from './store';
 import { labWidgetPlotlyPlugin } from './widget-plotly';
 import { labWidgetStorePlugin } from './widget-store';
@@ -14,7 +13,6 @@ import { labWidgetStorePlugin } from './widget-store';
 const plugins = [
   labFrontManagerPlugin,
   labPrimitivesPlugin,
-  labStorePythonPlugin,
   labStoreManagerPlugin,
   labWidgetPlotlyPlugin,
   labWidgetStorePlugin

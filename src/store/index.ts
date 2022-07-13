@@ -6,6 +6,7 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { ITLabStoreManager, TLabStoreManager } from './manager';
+import { connector } from './python';
 
 /**
  * Store manager plugin.
@@ -15,6 +16,8 @@ export const labStoreManagerPlugin: JupyterFrontEndPlugin<ITLabStoreManager> = {
   autoStart: true,
   provides: ITLabStoreManager,
   activate: (app: JupyterFrontEnd) => {
-    return new TLabStoreManager(app);
+    const manager = new TLabStoreManager(app);
+    manager.registerKernelStoreConnector('python', connector);
+    return manager;
   }
 };

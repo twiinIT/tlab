@@ -5,27 +5,12 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { IComm } from '@jupyterlab/services/lib/kernel/kernel';
-import { JSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
+import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import { useEffect } from 'react';
 import { ITLabStoreManager } from './manager';
 
 const TARGET_NAME = 'tlab';
-
-/**
- * Comm message metadata format.
- */
-interface ICommMsgMeta {
-  /**
-   * Event name.
-   */
-  name: string;
-
-  /**
-   * Request id.
-   */
-  req_id?: string;
-}
 
 /**
  * Front TLab store. Exposes kernel variables to the front end widgets
@@ -68,7 +53,7 @@ export class TLabStore implements ITLabStore {
   private kernel?: Kernel.IKernelConnection;
   private comm?: IComm;
   private cmdPromises = new Map<
-    string,
+    (msg: KernelMessage.ICommMsgMsg) => boolean,
     PromiseDelegate<KernelMessage.ICommMsgMsg>
   >();
 
@@ -109,8 +94,38 @@ export class TLabStore implements ITLabStore {
   }
 
   async fetch(name: string) {
-    const { data, modelId }: any = await this.command('get', name);
-    console.log({ data, modelId });
+    const uuid = UUID.uuid4();
+    const msg = await this.wait_for(
+      'get',
+      { name, uuid },
+      msg => msg.metadata.uuid === uuid && msg.content.data.method === 'upload'
+    );
+    console.log(msg);
+  }
+
+  /**
+   * Send command and wait for response.
+   * @param action
+   * @param payload
+   * @param check
+   * @returns
+   */
+  private async wait_for(
+    action: string,
+    payload: any,
+    check: (msg: KernelMessage.ICommMsgMsg) => boolean
+  ) {
+    if (!this.comm) {
+      throw new Error('no comm');
+    }
+    const promise = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
+    this.cmdPromises.set(check, promise);
+    setTimeout(() => {
+      promise.reject(new Error('timeout'));
+      this.cmdPromises.delete(check);
+    }, 10000);
+    await this.comm.send(payload, { action }).done;
+    return promise.promise;
   }
 
   /**
@@ -118,52 +133,13 @@ export class TLabStore implements ITLabStore {
    * @param msg Message from the kernel.
    */
   private onCommMsg(msg: KernelMessage.ICommMsgMsg) {
-    console.log(msg);
-    const { name, req_id } = msg.metadata as unknown as ICommMsgMeta;
-    switch (name) {
-      case 'reply': {
-        if (!req_id) {
-          throw new Error('no req_id');
-        }
-        const promise = this.cmdPromises.get(req_id);
-        promise?.resolve(msg);
-        this.cmdPromises.delete(req_id);
-        break;
-      }
-
-      case 'error': {
-        if (req_id) {
-          const promise = this.cmdPromises.get(req_id);
-          promise?.reject(msg);
-          this.cmdPromises.delete(req_id);
-        } else {
-          throw new Error(msg.content.data.toString());
-        }
-        break;
-      }
-
-      default: {
-        break;
+    console.log('onCommMsg', msg);
+    for (const [check, promise] of this.cmdPromises.entries()) {
+      if (check(msg)) {
+        promise.resolve(msg);
+        this.cmdPromises.delete(check);
       }
     }
-  }
-
-  /**
-   * Send command to comm and wait for reply. Use uuid and promises.
-   * @param name Event name.
-   * @param data Payload to send.
-   * @returns Promise of the reply.
-   */
-  private async command(name: string, data: any) {
-    if (!this.comm) {
-      throw new Error('no comm');
-    }
-    const req_id = UUID.uuid4();
-    const promise = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
-    this.cmdPromises.set(req_id, promise);
-    const meta: ICommMsgMeta = { name, req_id };
-    await this.comm.send(data, meta as unknown as JSONObject).done;
-    return promise.promise;
   }
 }
 

@@ -12,8 +12,8 @@ from json import loads as jsonloads
 
 from ipykernel.comm import Comm
 from IPython import get_ipython
-from traitlets import (Bytes, Container, Dict, HasTraits, Instance, Int, List,
-                       Set, Undefined, Unicode, default, observe)
+from traitlets import (Container, Dict, HasTraits, Instance, Int, List, Set,
+                       Undefined, Unicode, default, observe)
 
 from ._version import (__control_protocol_version__,
                        __jupyter_widgets_base_version__, __protocol_version__)
@@ -45,7 +45,7 @@ def _widget_to_json(x, obj):
     elif isinstance(x, (list, tuple)):
         return [_widget_to_json(v, obj) for v in x]
     elif isinstance(x, Widget):
-        return "IPY_MODEL_" + x.model_id
+        return "IPY_MODEL_" + x.uuid
     else:
         return x
 
@@ -362,7 +362,7 @@ class Widget(LoggingHasTraits):
             full_state = {}
             drop_defaults = False
             for widget in widgets:
-                full_state[widget.model_id] = {
+                full_state[widget.uuid] = {
                     'model_name': widget._model_name,
                     'model_module': widget._model_module,
                     'model_module_version': widget._model_module_version,
@@ -414,7 +414,7 @@ class Widget(LoggingHasTraits):
         if widgets is None:
             widgets = Widget._active_widgets.values()
         for widget in widgets:
-            state[widget.model_id] = widget._get_embed_state(
+            state[widget.uuid] = widget._get_embed_state(
                 drop_defaults=drop_defaults)
         return {'version_major': 2, 'version_minor': 0, 'state': state}
 
@@ -436,7 +436,7 @@ class Widget(LoggingHasTraits):
         return state
 
     def get_view_spec(self):
-        return dict(version_major=2, version_minor=0, model_id=self._model_id)
+        return dict(version_major=2, version_minor=0, uuid=self.uuid)
 
     #-------------------------------------------------------------------------
     # Traits
@@ -485,8 +485,8 @@ class Widget(LoggingHasTraits):
     #-------------------------------------------------------------------------
     def __init__(self, **kwargs):
         """Public constructor"""
-        self._model_id = kwargs.pop('model_id', None)
         super().__init__(**kwargs)
+        self.uuid = None
 
         Widget._call_widget_constructed(self)
 
@@ -498,39 +498,34 @@ class Widget(LoggingHasTraits):
     # Properties
     #-------------------------------------------------------------------------
 
-    def open(self, comm: Comm):
+    def open(self, comm: Comm, uuid: str):
         """Open a comm to the frontend if one isn't already open."""
         if self.comm is None:
             state, buffer_paths, buffers = _remove_buffers(self.get_state())
 
-            args = dict(data={
-                'state': state,
-                'buffer_paths': buffer_paths
-            },
-                        buffers=buffers,
-                        metadata={'version': __protocol_version__})
-            if self._model_id is not None:
-                args['comm_id'] = self._model_id
+            metadata = {'version': __protocol_version__, 'uuid': uuid}
+            args = dict(
+                data={
+                    'method': 'upload',
+                    'state': state,
+                    'buffer_paths': buffer_paths
+                },
+                buffers=buffers,
+                metadata=metadata,
+            )
 
             comm.send(**args)
             self.comm = comm
+            self.uuid = uuid
 
     @observe('comm')
     def _comm_changed(self, change):
         """Called when the comm is changed."""
         if change['new'] is None:
             return
-        self._model_id = self.model_id
 
         self.comm.on_msg(self._handle_msg)
-        Widget._active_widgets[self.model_id] = self
-
-    @property
-    def model_id(self):
-        """Gets the model id of this widget.
-
-        If a Comm doesn't exist yet, a Comm will be created automagically."""
-        return self.comm.comm_id
+        Widget._active_widgets[self.uuid] = self
 
     #-------------------------------------------------------------------------
     # Methods
@@ -543,7 +538,7 @@ class Widget(LoggingHasTraits):
         When the comm is closed, all of the widget views are automatically
         removed from the front-end."""
         if self.comm is not None:
-            Widget._active_widgets.pop(self.model_id, None)
+            Widget._active_widgets.pop(self.uuid, None)
             self.comm.close()
             self.comm = None
             self._repr_mimebundle_ = None
@@ -807,14 +802,16 @@ class Widget(LoggingHasTraits):
             data['application/vnd.jupyter.widget-view+json'] = {
                 'version_major': 2,
                 'version_minor': 0,
-                'model_id': self._model_id
+                'uuid': self.uuid
             }
             return data
 
     def _send(self, msg, buffers=None):
         """Sends a message to the model in the front-end."""
         if self.comm is not None and self.comm.kernel is not None:
-            self.comm.send(data=msg, buffers=buffers)
+            self.comm.send(data=msg,
+                           buffers=buffers,
+                           metadata={'uuid': self.uuid})
 
     def _repr_keys(self):
         traits = self.traits()
