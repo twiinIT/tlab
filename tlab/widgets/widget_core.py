@@ -5,7 +5,7 @@
 from traitlets import Unicode
 
 from ._version import __jupyter_widgets_controls_version__
-from .model import Widget
+from .widget import Widget
 
 
 class CoreWidget(Widget):

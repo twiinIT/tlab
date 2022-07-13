@@ -3,11 +3,11 @@
 
 from typing import TYPE_CHECKING, Any, Callable
 
-from .models.model import Widget
-
 if TYPE_CHECKING:
     from ipykernel.comm import Comm
     from IPython import get_ipython
+
+    from .widgets.widget import Widget
 
 _handlers = {}
 
@@ -25,6 +25,7 @@ class TLabKernelStore:
 
     def __init__(self, target='tlab'):
         self.init_comm(target)
+        self.widget_handlers = []
 
     def init_comm(self, target):
         self.shell = get_ipython()
@@ -40,6 +41,8 @@ class TLabKernelStore:
         handler = _handlers[msg['metadata']['action']]
         try:
             handler(self, msg)
+            for h in self.widget_handlers:
+                h(msg)
         except Exception as e:
             new_meta = dict(new_meta, req_id=msg['metadata']['req_id'])
             self.comm.send(str(e), new_meta)
@@ -48,5 +51,6 @@ class TLabKernelStore:
     def get(self, msg):
         var_name = msg['content']['data']['name']
         uuid = msg['content']['data']['uuid']
-        var: Widget = self.shell.user_ns[var_name]
+        var: 'Widget' = self.shell.user_ns[var_name]
         var.open(self.comm, uuid)
+        self.widget_handlers.append(var._handle_msg)

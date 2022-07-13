@@ -4,7 +4,6 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Kernel } from '@jupyterlab/services';
 import { Token } from '@lumino/coreutils';
-import { IDataModel } from './model';
 import { ITLabStore, TLabStore } from './store';
 
 export const ITLabStoreManager = new Token<ITLabStoreManager>(
@@ -40,15 +39,16 @@ export interface ITLabStoreManager {
 
   /**
    * Register a data model.
+   * @param id
    * @param model
    */
-  registerModel(model: IDataModel): void;
+  registerModel(id: string, model: any): void;
 
   /**
    * Get a data model
-   * @param id Model id.
+   * @param id
    */
-  getModel(id: string): IDataModel | undefined;
+  getModel(id: string): any;
 
   /**
    * @returns A new store.
@@ -61,7 +61,7 @@ export interface ITLabStoreManager {
  */
 export class TLabStoreManager implements ITLabStoreManager {
   private kernelStoreConnectors = new Map<string, KernelStoreConnector>();
-  private dataModels = new Map<string, IDataModel>();
+  private dataModels = new Map<string, any>();
 
   constructor(private app: JupyterFrontEnd) {}
 
@@ -80,8 +80,8 @@ export class TLabStoreManager implements ITLabStoreManager {
     return connector;
   }
 
-  registerModel(model: IDataModel) {
-    this.dataModels.set(model.id, model);
+  registerModel(id: string, model: any) {
+    this.dataModels.set(id, model);
   }
 
   getModel(id: string) {

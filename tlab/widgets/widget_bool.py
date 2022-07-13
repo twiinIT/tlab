@@ -3,9 +3,9 @@
 
 from traitlets import Bool, Unicode
 
-from .model import register
-from .model_core import CoreWidget
-from .model_value import ValueWidget
+from .widget import register
+from .widget_core import CoreWidget
+from .widget_value import ValueWidget
 
 
 @register

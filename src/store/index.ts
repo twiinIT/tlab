@@ -5,8 +5,12 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
+import { enableMapSet, enablePatches } from 'immer';
 import { ITLabStoreManager, TLabStoreManager } from './manager';
 import { connector } from './python';
+
+enableMapSet();
+enablePatches();
 
 /**
  * Store manager plugin.

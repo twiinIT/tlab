@@ -524,7 +524,7 @@ class Widget(LoggingHasTraits):
         if change['new'] is None:
             return
 
-        self.comm.on_msg(self._handle_msg)
+        # self.comm.on_msg(self._handle_msg)
         Widget._active_widgets[self.uuid] = self
 
     #-------------------------------------------------------------------------
@@ -539,7 +539,7 @@ class Widget(LoggingHasTraits):
         removed from the front-end."""
         if self.comm is not None:
             Widget._active_widgets.pop(self.uuid, None)
-            self.comm.close()
+            # self.comm.close()
             self.comm = None
             self._repr_mimebundle_ = None
 

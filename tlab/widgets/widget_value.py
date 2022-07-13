@@ -4,7 +4,7 @@
 
 from traitlets import Any
 
-from .model import Widget
+from .widget import Widget
 
 
 class ValueWidget(Widget):
