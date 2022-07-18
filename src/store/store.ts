@@ -3,9 +3,9 @@
 
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { KernelMessage } from '@jupyterlab/services';
 import { IComm } from '@jupyterlab/services/lib/kernel/kernel';
-import { UUID } from '@lumino/coreutils';
+import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import { useEffect } from 'react';
 import { ITLabStoreManager } from './manager';
@@ -16,6 +16,12 @@ interface IStoreObject {
   name: string;
   uuid: string;
   data: any;
+}
+
+interface ICommMsgMeta {
+  method: string;
+  req_id?: string;
+  uuid?: string;
 }
 
 interface ICommListener {
@@ -86,9 +92,12 @@ export class TLabStore implements ITLabStore {
   signal = new Signal<this, IStoreObject>(this);
 
   private sessionContext;
-  private kernel?: Kernel.IKernelConnection;
   private comm?: IComm;
   private listeners = new CommListeners();
+  private cmdDelegates = new Map<
+    string,
+    PromiseDelegate<KernelMessage.ICommMsgMsg>
+  >();
 
   constructor(
     private app: JupyterFrontEnd,
@@ -112,7 +121,6 @@ export class TLabStore implements ITLabStore {
     // Connect store to the kernel
     const kernel = this.sessionContext.session?.kernel;
     if (kernel) {
-      this.kernel = kernel;
       this.comm = kernel.createComm(TARGET_NAME);
       this.comm.onMsg = this.onCommMsg.bind(this);
 
@@ -121,8 +129,8 @@ export class TLabStore implements ITLabStore {
       const connector = this.manager.getKernelStoreConnector(language);
       await connector(kernel, TARGET_NAME);
 
-      const metadata = { name: 'syn', req_id: UUID.uuid4() };
-      this.comm.open(undefined, metadata);
+      const metadata: ICommMsgMeta = { method: 'open', req_id: UUID.uuid4() };
+      this.comm.open(undefined, metadata as any);
     }
   }
 
@@ -141,11 +149,7 @@ export class TLabStore implements ITLabStore {
         }
       }
     );
-    const msg = await this.wait_for(
-      'get',
-      { name, uuid },
-      msg => msg.metadata.uuid === uuid && msg.content.data.method === 'upload'
-    );
+    const msg = await this.command('fetch', { name, uuid });
     const storeObj = { name, uuid, data: msg.content.data.state };
     this.objects.set(uuid, storeObj);
     this.signal.emit(storeObj);
@@ -153,36 +157,24 @@ export class TLabStore implements ITLabStore {
   }
 
   /**
-   * Send command and wait for response.
-   * @param action
+   * Send a command to the kernel.
+   * @param method
    * @param payload
-   * @param check
-   * @returns
+   * @returns Result message.
    */
-  private async wait_for(
-    action: string,
-    payload: any,
-    check: (msg: KernelMessage.ICommMsgMsg) => boolean
-  ) {
+  private async command(method: string, payload: any) {
     if (!this.comm) {
       throw new Error('no comm');
     }
-    let listenerId: string;
-    const promise = new Promise<KernelMessage.ICommMsgMsg>(
-      (resolve, reject) => {
-        listenerId = this.listeners.add(check, msg => {
-          resolve(msg);
-        });
-        setTimeout(() => {
-          reject(new Error('timeout'));
-        }, 10000);
-      }
-    ).then(msg => {
-      this.listeners.remove(listenerId);
-      return msg;
-    });
-    await this.comm.send(payload, { action }).done;
-    return promise;
+    const delegate = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
+    const req_id = UUID.uuid4();
+    this.cmdDelegates.set(req_id, delegate);
+    setTimeout(() => {
+      delegate.reject(new Error('timeout'));
+      this.cmdDelegates.delete(req_id);
+    }, 10000);
+    await this.comm.send(payload, { method, req_id }).done;
+    return delegate.promise;
   }
 
   /**
@@ -191,6 +183,12 @@ export class TLabStore implements ITLabStore {
    */
   private onCommMsg(msg: KernelMessage.ICommMsgMsg) {
     console.log('onCommMsg', msg);
+    const { method, req_id } = msg.metadata as any as ICommMsgMeta;
+    if (method === 'reply' && req_id) {
+      const promiseDelegate = this.cmdDelegates.get(req_id);
+      promiseDelegate?.resolve(msg);
+      this.cmdDelegates.delete(req_id);
+    }
     this.listeners.resolve(msg);
   }
 }

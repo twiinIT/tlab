@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from ipykernel.comm import Comm
     from IPython import get_ipython
 
-    from .widgets.widget import Widget
+    from .models.model import Model
 
 _handlers = {}
 
@@ -25,7 +25,7 @@ class TLabKernelStore:
 
     def __init__(self, target='tlab'):
         self.init_comm(target)
-        self.widget_handlers = []
+        self.widget_handlers: dict[str, Callable] = {}
 
     def init_comm(self, target):
         self.shell = get_ipython()
@@ -34,23 +34,29 @@ class TLabKernelStore:
     def register(self, comm: 'Comm', open_msg):
         self.comm = comm
         comm.on_msg(self.on_msg)
-        new_meta = dict(name='reply',)
+        new_meta = dict(name='reply', req_id=open_msg['metadata']['req_id'])
         comm.send(None, new_meta)
 
     def on_msg(self, msg):
-        handler = _handlers[msg['metadata']['action']]
         try:
-            handler(self, msg)
-            for h in self.widget_handlers:
-                h(msg)
-        except Exception as e:
-            new_meta = dict(new_meta, req_id=msg['metadata']['req_id'])
-            self.comm.send(str(e), new_meta)
+            uuid = msg['metadata'].get('uuid', None)
+            if uuid is not None:
+                self.widget_handlers[uuid](msg)
+                return
 
-    @on('get')
+            method = msg['metadata']['method']
+            if method in _handlers:
+                _handlers[method](self, msg)
+                return
+        except Exception as e:
+            req_id = msg['metadata']['req_id']
+            self.comm.send(str(e), dict(name='error', req_id=req_id))
+
+    @on('fetch')
     def get(self, msg):
         var_name = msg['content']['data']['name']
+        var: 'Model' = self.shell.user_ns[var_name]
         uuid = msg['content']['data']['uuid']
-        var: 'Widget' = self.shell.user_ns[var_name]
-        var.open(self.comm, uuid)
-        self.widget_handlers.append(var._handle_msg)
+        req_id = msg['metadata']['req_id']
+        var.open(self.comm, uuid, req_id)
+        self.widget_handlers[uuid] = var._handle_msg
