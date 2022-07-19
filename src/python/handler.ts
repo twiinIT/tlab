@@ -2,44 +2,61 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { JSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
+import { IComm } from '@jupyterlab/services/lib/kernel/kernel';
+import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
-import { ITLabPyDSManager } from './datasource';
 
-/**
- * Comm message metadata format.
- */
+const TARGET_NAME = 'tlab';
+
 interface ICommMsgMeta {
-  /**
-   * Event name.
-   */
-  name: string;
-
-  /**
-   * Request id.
-   */
+  method: string;
   req_id?: string;
+  uuid?: string;
 }
 
-type EventHandler = (v: KernelMessage.ICommMsgMsg) => void;
+interface ICommListener {
+  check: (msg: KernelMessage.ICommMsgMsg) => boolean;
+  handler: (msg: KernelMessage.ICommMsgMsg) => void;
+}
+
+class CommListeners {
+  private map = new Map<string, ICommListener>();
+
+  add(
+    check: (msg: KernelMessage.ICommMsgMsg) => boolean,
+    handler: (msg: KernelMessage.ICommMsgMsg) => void
+  ) {
+    const uuid = UUID.uuid4();
+    this.map.set(uuid, { check, handler });
+    return uuid;
+  }
+
+  remove(uuid: string) {
+    this.map.delete(uuid);
+  }
+
+  resolve(msg: KernelMessage.ICommMsgMsg) {
+    for (const listener of this.map.values()) {
+      if (listener.check(msg)) {
+        listener.handler(msg);
+      }
+    }
+  }
+}
 
 /**
  * Python kernel store handler implementation.
  */
 export class PythonKernelStoreHandler implements IKernelStoreHandler {
-  static handlers = new Map<string, EventHandler>();
-
   private _ready = new PromiseDelegate<void>();
-  private cmdPromises = new Map<
+  private comm?: IComm;
+  private listeners = new CommListeners();
+  private cmdDelegates = new Map<
     string,
     PromiseDelegate<KernelMessage.ICommMsgMsg>
   >();
-  private comm;
 
-  constructor(
-    private kernel: Kernel.IKernelConnection,
-    private dsManager: ITLabPyDSManager
-  ) {
+  constructor(private kernel: Kernel.IKernelConnection) {
     this.comm = this.kernel.createComm('tlab');
     this.comm.onMsg = this.onCommMsg.bind(this);
     this.initKernel();
@@ -53,24 +70,52 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    * https://jupyter-notebook.readthedocs.io/en/stable/comms.html#opening-a-comm-from-the-frontend
    */
   private async initKernel() {
-    // create KernelStore and register the comm target in the kernel
     const code = `
     from tlab.store import TLabKernelStore
-    __tlab_kernel_store = TLabKernelStore('tlab')
-    `;
+    __tlab_kernel_store = TLabKernelStore('${TARGET_NAME}')
+      `;
     await this.kernel.requestExecute({ code }).done;
+    const metadata: ICommMsgMeta = { method: 'open', req_id: UUID.uuid4() };
+    this.comm?.open(undefined, metadata as any);
+  }
 
-    // ready
+  async fetch(name: string, uuid: string) {
+    // const listenerId = this.listeners.add(
+    //   msg => msg.metadata.uuid === uuid && msg.metadata.method === 'update',
+    //   msg => {
+    //     const obj = this.objects.get(uuid);
+    //     if (obj) {
+    //       const newState = msg.content.data as any;
+    //       obj.data = { ...obj.data, ...newState };
+    //       this.signal.emit(obj);
+    //     } else {
+    //       this.listeners.remove(listenerId);
+    //     }
+    //   }
+    // );
+    const msg = await this.command('fetch', { name, uuid });
+    return { name, uuid, data: msg.content.data };
+  }
+
+  /**
+   * Send a command to the kernel.
+   * @param method
+   * @param payload
+   * @returns Result message.
+   */
+  private async command(method: string, payload: any) {
+    if (!this.comm) {
+      throw new Error('no comm');
+    }
+    const delegate = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
     const req_id = UUID.uuid4();
-    const metadata = { name: 'syn', req_id };
-    const promise = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
-    promise.promise.then(() => this._ready.resolve());
-    this.cmdPromises.set(req_id, promise);
-
-    // open the comm from the front
-    const dss = JSON.stringify([...this.dsManager.dataSources.values()]);
-    this.comm.open(dss, metadata);
-    return this.ready;
+    this.cmdDelegates.set(req_id, delegate);
+    setTimeout(() => {
+      delegate.reject(new Error('timeout'));
+      this.cmdDelegates.delete(req_id);
+    }, 10000);
+    await this.comm.send(payload, { method, req_id }).done;
+    return delegate.promise;
   }
 
   /**
@@ -78,55 +123,13 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    * @param msg Message from the kernel.
    */
   private onCommMsg(msg: KernelMessage.ICommMsgMsg) {
-    console.log(msg);
-    const { name, req_id } = msg.metadata as unknown as ICommMsgMeta;
-    switch (name) {
-      case 'reply': {
-        if (!req_id) {
-          throw new Error('no req_id');
-        }
-        const promise = this.cmdPromises.get(req_id);
-        promise?.resolve(msg);
-        this.cmdPromises.delete(req_id);
-        break;
-      }
-
-      case 'error': {
-        if (req_id) {
-          const promise = this.cmdPromises.get(req_id);
-          promise?.reject(msg);
-          this.cmdPromises.delete(req_id);
-        } else {
-          throw new Error(msg.content.data.toString());
-        }
-        break;
-      }
-
-      default: {
-        const handler = PythonKernelStoreHandler.handlers.get(name);
-        handler?.call(this, msg);
-        break;
-      }
+    console.log('onCommMsg', msg);
+    const { method, req_id } = msg.metadata as any as ICommMsgMeta;
+    if (method === 'reply' && req_id) {
+      const promiseDelegate = this.cmdDelegates.get(req_id);
+      promiseDelegate?.resolve(msg);
+      this.cmdDelegates.delete(req_id);
     }
-  }
-
-  /**
-   * Send command to comm and wait for reply. Use uuid and promises.
-   * @param name Event name.
-   * @param data Payload to send.
-   * @returns Promise of the reply.
-   */
-  async command(name: string, data: any) {
-    const req_id = UUID.uuid4();
-    const promise = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
-    this.cmdPromises.set(req_id, promise);
-    const meta: ICommMsgMeta = { name, req_id };
-    await this.comm.send(data, meta as unknown as JSONObject).done;
-    return promise.promise;
-  }
-
-  async fetch(name: string) {
-    const data = await this.command('get', name);
-    return data.content.data as { data: any; modelId: string };
+    this.listeners.resolve(msg);
   }
 }

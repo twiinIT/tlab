@@ -40,7 +40,7 @@ version = (
     .replace("-alpha.", "a")
     .replace("-beta.", "b")
     .replace("-rc.", "rc")
-) 
+)
 
 setup_args = dict(
     name=name,
@@ -72,6 +72,7 @@ setup_args = dict(
         "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
     ],
     install_requires=[
+        "reactivex",
     ],
 )
 

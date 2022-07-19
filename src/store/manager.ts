@@ -5,16 +5,11 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Kernel } from '@jupyterlab/services';
 import { Token } from '@lumino/coreutils';
 import { IKernelStoreHandler } from './handler';
-import { IDataModel } from './model';
 import { ITLabStore, TLabStore } from './store';
 
 export const ITLabStoreManager = new Token<ITLabStoreManager>(
   'tlab:ITLabStoreManager'
 );
-
-type IKernelStoreHandlerFactory = (
-  kernel: Kernel.IKernelConnection
-) => IKernelStoreHandler;
 
 /**
  * Store manager. Registers kernel store handlers (language support) and data models.
@@ -24,29 +19,9 @@ export interface ITLabStoreManager {
   /**
    * Register a kernel store handler.
    * @param language JupyterLab language string.
-   * @param factory Function that creates the associated kernel store handler.
+   * @param handlerClass
    */
-  registerKernelStoreHandler(
-    language: string,
-    factory: IKernelStoreHandlerFactory
-  ): void;
-
-  /**
-   * Register a data model.
-   * @param model
-   */
-  registerModel(model: IDataModel): void;
-
-  /**
-   * Get a data model
-   * @param id Model id.
-   */
-  getModel(id: string): IDataModel | undefined;
-
-  /**
-   * @returns A new store.
-   */
-  newStore(): ITLabStore;
+  registerKernelStoreHandler(language: string, handlerClass: any): void;
 
   /**
    * Get a kernel store handler for a kernel connection.
@@ -56,30 +31,57 @@ export interface ITLabStoreManager {
   getKernelStoreHandler(
     kernel: Kernel.IKernelConnection
   ): Promise<IKernelStoreHandler>;
+
+  /**
+   * Register a data model.
+   * @param id
+   * @param model
+   */
+  registerModel(id: string, model: any): void;
+
+  /**
+   * Get a data model
+   * @param id
+   */
+  getModel(id: string): any;
+
+  /**
+   * @returns A new store.
+   */
+  newStore(): ITLabStore;
 }
 
 /**
  * ITLabStoreManager implementation.
  */
 export class TLabStoreManager implements ITLabStoreManager {
-  private kernelStoreHandlerFactories = new Map<
-    string,
-    IKernelStoreHandlerFactory
-  >();
+  private kernelStoreHandlerClasses = new Map<string, any>();
   private kernelStoreHandlers = new Map<string, IKernelStoreHandler>();
-  private dataModels = new Map<string, IDataModel>();
+  private dataModels = new Map<string, any>();
 
   constructor(private app: JupyterFrontEnd) {}
 
-  registerKernelStoreHandler(
-    language: string,
-    factory: IKernelStoreHandlerFactory
-  ) {
-    this.kernelStoreHandlerFactories.set(language, factory);
+  registerKernelStoreHandler(language: string, handlerClass: any) {
+    this.kernelStoreHandlerClasses.set(language, handlerClass);
   }
 
-  registerModel(model: IDataModel) {
-    this.dataModels.set(model.id, model);
+  async getKernelStoreHandler(kernel: Kernel.IKernelConnection) {
+    let handler = this.kernelStoreHandlers.get(kernel.id);
+    if (!handler) {
+      const infos = await kernel.info;
+      const language = infos.language_info.name;
+      const klass = this.kernelStoreHandlerClasses.get(language);
+      if (!klass) {
+        throw new Error('Language not supported');
+      }
+      handler = new klass(kernel) as IKernelStoreHandler;
+      this.kernelStoreHandlers.set(kernel.id, handler);
+    }
+    return handler;
+  }
+
+  registerModel(id: string, model: any) {
+    this.dataModels.set(id, model);
   }
 
   getModel(id: string) {
@@ -88,20 +90,5 @@ export class TLabStoreManager implements ITLabStoreManager {
 
   newStore(): ITLabStore {
     return new TLabStore(this.app, this);
-  }
-
-  async getKernelStoreHandler(kernel: Kernel.IKernelConnection) {
-    let handler = this.kernelStoreHandlers.get(kernel.id);
-    if (!handler) {
-      const infos = await kernel.info;
-      const language = infos.language_info.name;
-      const factory = this.kernelStoreHandlerFactories.get(language);
-      if (!factory) {
-        throw new Error('Language not supported');
-      }
-      handler = factory(kernel);
-      this.kernelStoreHandlers.set(kernel.id, handler);
-    }
-    return handler;
   }
 }
