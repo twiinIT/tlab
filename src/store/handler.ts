@@ -1,6 +1,8 @@
 // Copyright (C) 2022, twiinIT
 // SPDX-License-Identifier: BSD-3-Clause
 
+import { IStoreObject } from './store';
+
 /**
  * Kernel store handler.
  */
@@ -13,7 +15,8 @@ export interface IKernelStoreHandler {
   /**
    * Fetch a kernel variable.
    * @param name Variable name.
+   * @param uuid Store UUID of the variable.
    * @returns Serialized variable and model id.
    */
-  fetch(name: string): Promise<{ data: any; modelId: string }>;
+  fetch(name: string, uuid: string): Promise<IStoreObject>;
 }

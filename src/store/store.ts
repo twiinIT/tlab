@@ -3,6 +3,7 @@
 
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
+import { UUID } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import { useEffect } from 'react';
 import { IKernelStoreHandler } from './handler';
@@ -10,8 +11,8 @@ import { ITLabStoreManager } from './manager';
 
 export interface IStoreObject {
   name: string;
+  uuid: string;
   data: any;
-  modelId: string;
 }
 
 /**
@@ -27,7 +28,7 @@ export interface ITLabStore {
   /**
    * Signal for when an object is modified to the store.
    */
-  signal: Signal<this, void>;
+  signal: Signal<this, IStoreObject>;
 
   /**
    * Connect store to kernel, obtain kernel store handler
@@ -49,7 +50,7 @@ export interface ITLabStore {
  */
 export class TLabStore implements ITLabStore {
   objects = new Map<string, IStoreObject>();
-  signal = new Signal<this, void>(this);
+  signal = new Signal<this, IStoreObject>(this);
 
   private sessionContext;
   private kernelStoreHandler?: IKernelStoreHandler;
@@ -87,17 +88,11 @@ export class TLabStore implements ITLabStore {
     if (!this.kernelStoreHandler) {
       throw new Error('Kernel store not connected');
     }
-    const { data, modelId } = await this.kernelStoreHandler.fetch(name);
-    const model = this.manager.getModel(modelId);
-    if (!model) {
-      throw new Error('Data model not registered');
-    }
-    const parsed = await model.deserialize(data);
-    const object: IStoreObject = { name, data: parsed, modelId };
-    this.objects.set(name, object);
-    this.signal.emit();
-    console.log(object);
-    return object;
+    const uuid = UUID.uuid4();
+    const storeObj = await this.kernelStoreHandler?.fetch(name, uuid);
+    this.objects.set(uuid, storeObj);
+    this.signal.emit(storeObj);
+    return storeObj;
   }
 }
 
@@ -108,7 +103,7 @@ export class TLabStore implements ITLabStore {
  */
 export function useStoreSignal(
   store: ITLabStore,
-  callback: (store: ITLabStore) => void
+  callback: (store: ITLabStore, obj: IStoreObject) => void
 ) {
   useEffect(() => {
     store.signal.connect(callback);

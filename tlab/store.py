@@ -1,24 +1,16 @@
 # Copyright (C) 2022, twiinIT
 # SPDX-License-Identifier: BSD-3-Clause
 
-import importlib
-import json
-from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from functools import partial
+from typing import TYPE_CHECKING, Any, Callable
+
+import reactivex as rx
+
+from .models import Model, Value
 
 if TYPE_CHECKING:
     from ipykernel.comm import Comm
     from IPython import get_ipython
-
-    from tlab.datasource import DataSource
-
-
-# Pydantic?
-@dataclass
-class CommMsgMeta:
-    name: str
-    req_id: Optional[str] = None
-
 
 _handlers = {}
 
@@ -32,12 +24,11 @@ def on(name: str):
     return decorator
 
 
-class TLabKernelStore:
-    datasources: dict[type, 'DataSource'] = {}
+class TLabKernelStore(rx.Subject):
 
     def __init__(self, target='tlab'):
         self.init_comm(target)
-        self.store: dict[str, Any] = {}
+        self.widget_handlers: dict[str, Callable] = {}
 
     def init_comm(self, target):
         self.shell = get_ipython()
@@ -46,33 +37,33 @@ class TLabKernelStore:
     def register(self, comm: 'Comm', open_msg):
         self.comm = comm
         comm.on_msg(self.on_msg)
-        meta = CommMsgMeta(**open_msg['metadata'])
-        if meta.name == 'syn':
-            dss = json.loads(open_msg['content']['data'])
-            for ds in dss:
-                module = importlib.import_module(ds['module'])
-                ds_cls: 'DataSource' = getattr(module, ds['class'])
-                for cls in ds_cls.input_classes:
-                    self.datasources[cls] = ds_cls
-            new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
-            comm.send(None, asdict(new_meta))
+        new_meta = dict(method='reply', req_id=open_msg['metadata']['req_id'])
+        comm.send(None, new_meta)
 
     def on_msg(self, msg):
-        meta = CommMsgMeta(**msg['metadata'])
-        handler = _handlers[meta.name]
         try:
-            handler(self, msg)
-        except Exception as e:
-            new_meta = CommMsgMeta(name='error', req_id=meta.req_id)
-            self.comm.send(str(e), asdict(new_meta))
+            uuid = msg['metadata'].get('uuid', None)
+            if uuid is not None:
+                self.widget_handlers[uuid](msg)
+                return
 
-    @on('get')
+            method = msg['metadata']['method']
+            if method in _handlers:
+                _handlers[method](self, msg)
+                return
+        except Exception as e:
+            req_id = msg['metadata']['req_id']
+            self.comm.send(str(e), dict(method='error', req_id=req_id))
+
+    @on('fetch')
     def get(self, msg):
-        var_name = msg['content']['data']
-        var = self.shell.user_ns[var_name]
-        self.store[var_name] = var
-        ds = self.datasources[type(var)]
-        data, model_id = ds.serialize(var)
-        meta = CommMsgMeta(**msg['metadata'])
-        new_meta = CommMsgMeta(name='reply', req_id=meta.req_id)
-        self.comm.send({'data': data, 'modelId': model_id}, asdict(new_meta))
+        var_name = msg['content']['data']['name']
+        var: Model | Value = self.shell.user_ns[var_name]
+        uuid = msg['content']['data']['uuid']
+        req_id = msg['metadata']['req_id']
+        state = var.value if isinstance(var, Value) else var.get_state()
+        self.comm.send(state, dict(method='reply', req_id=req_id))
+        var.subscribe(on_next=partial(self.on_model_update, uuid))
+
+    def on_model_update(self, uuid, value):
+        self.comm.send(dict([value]), dict(method='update', uuid=uuid))
