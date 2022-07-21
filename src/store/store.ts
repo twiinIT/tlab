@@ -8,11 +8,12 @@ import { Signal } from '@lumino/signaling';
 import { useEffect } from 'react';
 import { IKernelStoreHandler } from './handler';
 import { ITLabStoreManager } from './manager';
+import { Model } from './models';
 
-export interface IStoreObject {
+interface IStoreObject {
   name: string;
   uuid: string;
-  data: any;
+  data: Model;
 }
 
 /**
@@ -87,7 +88,10 @@ export class TLabStore implements ITLabStore {
     if (!this.kernelStoreHandler) throw new Error('Kernel store not connected');
 
     const uuid = UUID.uuid4();
-    const storeObj = await this.kernelStoreHandler?.fetch(name, uuid);
+    const rawObj = await this.kernelStoreHandler?.fetch(name, uuid);
+    const data = this.manager.parseModel(rawObj);
+    data.subscribe(v => console.log(uuid, v));
+    const storeObj: IStoreObject = { name, uuid, data };
     this.objects.set(uuid, storeObj);
     this.signal.emit(storeObj);
     return storeObj;

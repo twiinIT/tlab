@@ -92,7 +92,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     //   }
     // );
     const msg = await this.command('fetch', { name, uuid });
-    return { name, uuid, data: msg.content.data };
+    return msg.content.data;
   }
 
   /**
