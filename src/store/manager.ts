@@ -71,9 +71,7 @@ export class TLabStoreManager implements ITLabStoreManager {
       const infos = await kernel.info;
       const language = infos.language_info.name;
       const klass = this.kernelStoreHandlerClasses.get(language);
-      if (!klass) {
-        throw new Error('Language not supported');
-      }
+      if (!klass) throw new Error('Language not supported');
       handler = new klass(kernel) as IKernelStoreHandler;
       this.kernelStoreHandlers.set(kernel.id, handler);
     }
