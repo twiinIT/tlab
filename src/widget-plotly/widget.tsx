@@ -23,7 +23,7 @@ export function PlotlyWidget({
       _dataSources[val.name] = val.data;
     });
     setDataSources(_dataSources);
-    const _dataSourceOptions = Object.keys(_dataSources).map(name => ({
+    const _dataSourceOptions = Reflect.ownKeys(_dataSources).map(name => ({
       value: name,
       label: name
     }));

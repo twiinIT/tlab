@@ -70,9 +70,8 @@ export class TLabStore implements ITLabStore {
   async connect() {
     // User kernel selection
     const val = await this.sessionContext.initialize();
-    if (val) {
-      await sessionContextDialogs.selectKernel(this.sessionContext);
-    }
+    if (val) await sessionContextDialogs.selectKernel(this.sessionContext);
+
     // Connect store to the kernel
     const kernel = this.sessionContext.session?.kernel;
     if (kernel) {
@@ -85,9 +84,8 @@ export class TLabStore implements ITLabStore {
   }
 
   async fetch(name: string) {
-    if (!this.kernelStoreHandler) {
-      throw new Error('Kernel store not connected');
-    }
+    if (!this.kernelStoreHandler) throw new Error('Kernel store not connected');
+
     const uuid = UUID.uuid4();
     const storeObj = await this.kernelStoreHandler?.fetch(name, uuid);
     this.objects.set(uuid, storeObj);

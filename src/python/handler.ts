@@ -37,9 +37,7 @@ class CommListeners {
 
   resolve(msg: KernelMessage.ICommMsgMsg) {
     for (const listener of this.map.values()) {
-      if (listener.check(msg)) {
-        listener.handler(msg);
-      }
+      if (listener.check(msg)) listener.handler(msg);
     }
   }
 }
@@ -104,9 +102,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    * @returns Result message.
    */
   private async command(method: string, payload: any) {
-    if (!this.comm) {
-      throw new Error('no comm');
-    }
+    if (!this.comm) throw new Error('no comm');
     const delegate = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
     const req_id = UUID.uuid4();
     this.cmdDelegates.set(req_id, delegate);
