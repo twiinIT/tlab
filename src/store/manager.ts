@@ -5,6 +5,7 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Kernel } from '@jupyterlab/services';
 import { Token } from '@lumino/coreutils';
 import { IKernelStoreHandler } from './handler';
+import { Model } from './models';
 import { ITLabStore, TLabStore } from './store';
 
 export const ITLabStoreManager = new Token<ITLabStoreManager>(
@@ -46,6 +47,12 @@ export interface ITLabStoreManager {
   getModel(id: string): any;
 
   /**
+   * Deserialize a data model.
+   * @param obj
+   */
+  parseModel(obj: any): Model;
+
+  /**
    * @returns A new store.
    */
   newStore(): ITLabStore;
@@ -84,6 +91,10 @@ export class TLabStoreManager implements ITLabStoreManager {
 
   getModel(id: string) {
     return this.dataModels.get(id);
+  }
+
+  parseModel(obj: any) {
+    return Model.parseModel(this.dataModels, obj);
   }
 
   newStore(): ITLabStore {
