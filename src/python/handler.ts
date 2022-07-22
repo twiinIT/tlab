@@ -10,7 +10,7 @@ const TARGET_NAME = 'tlab';
 
 interface ICommMsgMeta {
   method: string;
-  req_id?: string;
+  reqId?: string;
   uuid?: string;
 }
 
@@ -46,7 +46,7 @@ class CommListeners {
  * Python kernel store handler implementation.
  */
 export class PythonKernelStoreHandler implements IKernelStoreHandler {
-  private _ready = new PromiseDelegate<void>();
+  private _ready = new PromiseDelegate<any>();
   private comm?: IComm;
   private listeners = new CommListeners();
   private cmdDelegates = new Map<
@@ -73,8 +73,9 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     __tlab_kernel_store = TLabKernelStore('${TARGET_NAME}')
       `;
     await this.kernel.requestExecute({ code }).done;
-    const metadata: ICommMsgMeta = { method: 'open', req_id: UUID.uuid4() };
-    this.comm?.open(undefined, metadata as any);
+    const reqId = UUID.uuid4();
+    this.cmdDelegates.set(reqId, this._ready);
+    this.comm?.open(undefined, { method: 'open', reqId });
   }
 
   async fetch(name: string, uuid: string) {
@@ -104,13 +105,13 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
   private async command(method: string, payload: any) {
     if (!this.comm) throw new Error('no comm');
     const delegate = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
-    const req_id = UUID.uuid4();
-    this.cmdDelegates.set(req_id, delegate);
+    const reqId = UUID.uuid4();
+    this.cmdDelegates.set(reqId, delegate);
     setTimeout(() => {
       delegate.reject(new Error('timeout'));
-      this.cmdDelegates.delete(req_id);
+      this.cmdDelegates.delete(reqId);
     }, 10000);
-    await this.comm.send(payload, { method, req_id }).done;
+    await this.comm.send(payload, { method, reqId }).done;
     return delegate.promise;
   }
 
@@ -120,11 +121,11 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    */
   private onCommMsg(msg: KernelMessage.ICommMsgMsg) {
     console.log('onCommMsg', msg);
-    const { method, req_id } = msg.metadata as any as ICommMsgMeta;
-    if (method === 'reply' && req_id) {
-      const promiseDelegate = this.cmdDelegates.get(req_id);
+    const { method, reqId } = msg.metadata as any as ICommMsgMeta;
+    if (method === 'reply' && reqId) {
+      const promiseDelegate = this.cmdDelegates.get(reqId);
       promiseDelegate?.resolve(msg);
-      this.cmdDelegates.delete(req_id);
+      this.cmdDelegates.delete(reqId);
     }
     this.listeners.resolve(msg);
   }
