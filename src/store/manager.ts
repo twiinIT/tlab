@@ -5,16 +5,12 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Kernel } from '@jupyterlab/services';
 import { Token } from '@lumino/coreutils';
 import { IKernelStoreHandler } from './handler';
-import { IDataModel } from './model';
+import { Model } from './models';
 import { ITLabStore, TLabStore } from './store';
 
 export const ITLabStoreManager = new Token<ITLabStoreManager>(
   'tlab:ITLabStoreManager'
 );
-
-type IKernelStoreHandlerFactory = (
-  kernel: Kernel.IKernelConnection
-) => IKernelStoreHandler;
 
 /**
  * Store manager. Registers kernel store handlers (language support) and data models.
@@ -24,29 +20,9 @@ export interface ITLabStoreManager {
   /**
    * Register a kernel store handler.
    * @param language JupyterLab language string.
-   * @param factory Function that creates the associated kernel store handler.
+   * @param handlerClass
    */
-  registerKernelStoreHandler(
-    language: string,
-    factory: IKernelStoreHandlerFactory
-  ): void;
-
-  /**
-   * Register a data model.
-   * @param model
-   */
-  registerModel(model: IDataModel): void;
-
-  /**
-   * Get a data model
-   * @param id Model id.
-   */
-  getModel(id: string): IDataModel | undefined;
-
-  /**
-   * @returns A new store.
-   */
-  newStore(): ITLabStore;
+  registerKernelStoreHandler(language: string, handlerClass: any): void;
 
   /**
    * Get a kernel store handler for a kernel connection.
@@ -56,55 +32,72 @@ export interface ITLabStoreManager {
   getKernelStoreHandler(
     kernel: Kernel.IKernelConnection
   ): Promise<IKernelStoreHandler>;
+
+  /**
+   * Register a data model.
+   * @param id
+   * @param model
+   */
+  registerModel(id: string, model: any): void;
+
+  /**
+   * Get a data model
+   * @param id
+   */
+  getModel(id: string): any;
+
+  /**
+   * Deserialize a data model.
+   * @param obj
+   */
+  parseModel(obj: any): Model;
+
+  /**
+   * @returns A new store.
+   */
+  newStore(): ITLabStore;
 }
 
 /**
  * ITLabStoreManager implementation.
  */
 export class TLabStoreManager implements ITLabStoreManager {
-  private kernelStoreHandlerFactories: Map<string, IKernelStoreHandlerFactory>;
-  private kernelStoreHandlers: Map<string, IKernelStoreHandler>;
-  private dataModels: Map<string, IDataModel>;
+  private kernelStoreHandlerClasses = new Map<string, any>();
+  private kernelStoreHandlers = new Map<string, IKernelStoreHandler>();
+  private dataModels = new Map<string, any>();
 
-  constructor(private app: JupyterFrontEnd) {
-    this.kernelStoreHandlerFactories = new Map();
-    this.kernelStoreHandlers = new Map();
-    this.dataModels = new Map();
+  constructor(private app: JupyterFrontEnd) {}
+
+  registerKernelStoreHandler(language: string, handlerClass: any) {
+    this.kernelStoreHandlerClasses.set(language, handlerClass);
   }
 
-  registerKernelStoreHandler(
-    language: string,
-    factory: IKernelStoreHandlerFactory
-  ): void {
-    this.kernelStoreHandlerFactories.set(language, factory);
-  }
-
-  registerModel(model: IDataModel): void {
-    this.dataModels.set(model.id, model);
-  }
-
-  getModel(id: string): IDataModel | undefined {
-    return this.dataModels.get(id);
-  }
-
-  newStore(): ITLabStore {
-    return new TLabStore(this.app, this);
-  }
-
-  async getKernelStoreHandler(
-    kernel: Kernel.IKernelConnection
-  ): Promise<IKernelStoreHandler> {
+  async getKernelStoreHandler(kernel: Kernel.IKernelConnection) {
     let handler = this.kernelStoreHandlers.get(kernel.id);
     if (!handler) {
       const infos = await kernel.info;
       const language = infos.language_info.name;
-      const factory = this.kernelStoreHandlerFactories.get(language);
-      if (!factory) {
-        throw new Error('Language not supported');
-      }
-      handler = factory(kernel);
+      const klass = this.kernelStoreHandlerClasses.get(language);
+      if (!klass) throw new Error('Language not supported');
+      handler = new klass(kernel) as IKernelStoreHandler;
       this.kernelStoreHandlers.set(kernel.id, handler);
     }
     return handler;
+  }
+
+  registerModel(id: string, model: any) {
+    this.dataModels.set(id, model);
+  }
+
+  getModel(id: string) {
+    return this.dataModels.get(id);
+  }
+
+  parseModel(obj: any) {
+    return Model.parseModel(this.dataModels, obj);
+  }
+
+  newStore(): ITLabStore {
+    return new TLabStore(this.app, this);
   }
 }

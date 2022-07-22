@@ -58,13 +58,9 @@ export interface ITLabWidgetProps {
  * ITLabFrontManager implementation.
  */
 export class TLabFrontManager implements ITLabFrontManager {
-  widgets: Map<string, ITLabWidget>;
+  widgets = new Map<string, ITLabWidget>();
 
-  constructor() {
-    this.widgets = new Map();
-  }
-
-  registerWidget(widget: ITLabWidget): void {
+  registerWidget(widget: ITLabWidget) {
     this.widgets.set(widget.id, widget);
   }
 }
