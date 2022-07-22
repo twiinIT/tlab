@@ -58,7 +58,7 @@ class Value<T> extends Subject<IJSONPatchOperation<T>> {
 }
 
 export abstract class Model extends Subject<IJSONPatchOperation<any>> {
-  abstract _modelName: string;
+  abstract modelName: string;
 
   private _syncedKeys?: string[];
   private _syncedValues: { [key: string]: Value<any> } = {};
@@ -89,7 +89,7 @@ export abstract class Model extends Subject<IJSONPatchOperation<any>> {
   }
 
   toJSON() {
-    return { _modelName: this._modelName, ...this._syncedValues };
+    return { modelName: this.modelName, ...this._syncedValues };
   }
 
   /**
@@ -99,12 +99,12 @@ export abstract class Model extends Subject<IJSONPatchOperation<any>> {
    * @returns Deserialized model
    */
   static parseModel(dataModels: Map<string, any>, obj: any): Model {
-    const modelClass = dataModels.get(obj._modelName);
+    const modelClass = dataModels.get(obj.modelName);
     const model = new modelClass();
     for (const key of Reflect.ownKeys(obj)) {
-      if (key === '_modelName') continue;
+      if (key === 'modelName') continue;
       let value = obj[key];
-      if (value._modelName) value = Model.parseModel(dataModels, value);
+      if (value.modelName) value = Model.parseModel(dataModels, value);
       model[key] = value;
     }
     return model;

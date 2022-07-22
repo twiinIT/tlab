@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import reactivex as rx
 
-from .models import Model, Value
-
 if TYPE_CHECKING:
     from ipykernel.comm import Comm
     from IPython import get_ipython
+
+    from .models import Model
 
 _handlers = {}
 
@@ -58,12 +58,12 @@ class TLabKernelStore(rx.Subject):
     @on('fetch')
     def get(self, msg):
         var_name = msg['content']['data']['name']
-        var: Model | Value = self.shell.user_ns[var_name]
+        var: 'Model' = self.shell.user_ns[var_name]
         uuid = msg['content']['data']['uuid']
         reqId = msg['metadata']['reqId']
-        state = var.value if isinstance(var, Value) else var.get_state()
+        state = var.dict()
         self.comm.send(state, dict(method='reply', reqId=reqId))
         var.subscribe(on_next=partial(self.on_model_update, uuid))
 
     def on_model_update(self, uuid, value):
-        self.comm.send(dict([value]), dict(method='update', uuid=uuid))
+        self.comm.send(value, dict(method='update', uuid=uuid))
