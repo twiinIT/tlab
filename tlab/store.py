@@ -37,7 +37,7 @@ class TLabKernelStore(rx.Subject):
     def register(self, comm: 'Comm', open_msg):
         self.comm = comm
         comm.on_msg(self.on_msg)
-        new_meta = dict(method='reply', req_id=open_msg['metadata']['req_id'])
+        new_meta = dict(method='reply', reqId=open_msg['metadata']['reqId'])
         comm.send(None, new_meta)
 
     def on_msg(self, msg):
@@ -52,17 +52,17 @@ class TLabKernelStore(rx.Subject):
                 _handlers[method](self, msg)
                 return
         except Exception as e:
-            req_id = msg['metadata']['req_id']
-            self.comm.send(str(e), dict(method='error', req_id=req_id))
+            reqId = msg['metadata']['reqId']
+            self.comm.send(str(e), dict(method='error', reqId=reqId))
 
     @on('fetch')
     def get(self, msg):
         var_name = msg['content']['data']['name']
         var: Model | Value = self.shell.user_ns[var_name]
         uuid = msg['content']['data']['uuid']
-        req_id = msg['metadata']['req_id']
+        reqId = msg['metadata']['reqId']
         state = var.value if isinstance(var, Value) else var.get_state()
-        self.comm.send(state, dict(method='reply', req_id=req_id))
+        self.comm.send(state, dict(method='reply', reqId=reqId))
         var.subscribe(on_next=partial(self.on_model_update, uuid))
 
     def on_model_update(self, uuid, value):
