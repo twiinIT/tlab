@@ -83,9 +83,6 @@ export abstract class Model extends Subject<IJSONPatchOperation<any>> {
           this.next({ op, path: [key.toString(), ...path], value })
       });
     });
-
-    // Log changes
-    this.subscribe(console.log);
   }
 
   toJSON() {

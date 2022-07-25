@@ -89,11 +89,15 @@ export class TLabStore implements ITLabStore {
 
     const uuid = UUID.uuid4();
     const rawObj = await this.kernelStoreHandler?.fetch(name, uuid);
+
     const data = this.manager.parseModel(rawObj);
-    data.subscribe(v => console.log(uuid, v));
+    data.subscribe(v => console.log('front change:', uuid, v));
+    Reflect.set(window, name, data);
+
     const storeObj: IStoreObject = { name, uuid, data };
     this.objects.set(uuid, storeObj);
     this.signal.emit(storeObj);
+
     return storeObj;
   }
 }

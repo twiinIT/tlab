@@ -1,67 +1,30 @@
 # Copyright (C) 2022, twiinIT
 # SPDX-License-Identifier: BSD-3-Clause
 
-from functools import partial
-from inspect import getmembers
-from typing import Any, Generic, Type, TypeVar
-
 import reactivex as rx
+from pyportrait import HasTraits
 
-T = TypeVar('T')
 
+class Model(HasTraits):
+    _modelName: str
 
-class Value(rx.Subject, Generic[T]):
-    __slots__ = ('_value',)
-
-    def __init__(self,
-                 typ: Type[T],
-                 allow_none: bool = True,
-                 default: T = None) -> None:
+    def __init__(self):
         super().__init__()
-        self.typ = typ
-        self.allow_none = allow_none
-        self.value = default
+        self._patch_subject = rx.Subject()
+        self._subject.subscribe(self._value_changed)
 
-    @property
-    def value(self) -> T:
-        return self._value
+    def subscribe(self, *args, **kwargs):
+        return self._patch_subject.subscribe(*args, **kwargs)
 
-    @value.setter
-    def value(self, value: T) -> None:
-        self._value = self.validate(value)
-        self.on_next(self._value)
+    def _value_changed(self, change):
+        op = 'replace'
+        path = [change['name']]
+        value = change['new']
+        self._patch_subject.on_next(dict(op=op, path=path, value=value))
 
-    def validate(self, value: T) -> T:
-        if value is None and not self.allow_none:
-            raise ValueError('Value cannot be None')
-        if value is not None and not isinstance(value, self.typ):
-            raise ValueError(f"Value must be of type {self.typ}")
-        return value
-
-
-class Model(rx.Subject):
-
-    def get_state(self) -> dict[str, Any]:
-        state = {}
-        for name, value in getmembers(self):
-            if isinstance(value, Value):
-                state[name] = value.value
-        return state
-
-    def on_member_update(self, name: str, value: Any) -> None:
-        self.on_next((name, value))
-
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        super().__setattr__(__name, __value)
-        if isinstance(__value, Value):
-            __value.subscribe(on_next=partial(self.on_member_update, __name))
-
-
-class Person(Model):
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.name = Value(str)
-        self.age = Value(int)
-        self.is_student = Value(bool)
-        self.subscribe(on_next=print)
+    def dict(self):
+        d = super().dict(exclude={
+            '_subject', '_observables', '_observers', '_patch_subject'
+        })
+        d['_modelName'] = self._modelName
+        return d

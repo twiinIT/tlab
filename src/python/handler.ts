@@ -120,7 +120,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    * @param msg Message from the kernel.
    */
   private onCommMsg(msg: KernelMessage.ICommMsgMsg) {
-    console.log('onCommMsg', msg);
+    console.log('onCommMsg:', msg);
     const { method, reqId } = msg.metadata as any as ICommMsgMeta;
     if (method === 'reply' && reqId) {
       const promiseDelegate = this.cmdDelegates.get(reqId);
