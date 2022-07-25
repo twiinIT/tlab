@@ -1,4 +1,7 @@
 // Copyright (C) 2022, twiinIT
+// SPDX-License-Identifier: BSD-3-Clause
+
+import { IJSONPatchOperation } from './models';
 
 /**
  * Kernel store handler.
@@ -16,4 +19,11 @@ export interface IKernelStoreHandler {
    * @returns Serialized variable and model id.
    */
   fetch(name: string, uuid: string): Promise<any>;
+
+  /**
+   * Send a patch to the kernel store.
+   * @param uuid
+   * @param patch
+   */
+  sendPatch(uuid: string, patch: IJSONPatchOperation<any>[]): void;
 }

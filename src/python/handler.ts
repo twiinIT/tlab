@@ -5,6 +5,8 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { IComm } from '@jupyterlab/services/lib/kernel/kernel';
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
+import { IJSONPatchOperation } from '../store/models';
+import { ITLabStore } from '../store/store';
 
 const TARGET_NAME = 'tlab';
 
@@ -54,7 +56,10 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     PromiseDelegate<KernelMessage.ICommMsgMsg>
   >();
 
-  constructor(private kernel: Kernel.IKernelConnection) {
+  constructor(
+    private store: ITLabStore,
+    private kernel: Kernel.IKernelConnection
+  ) {
     this.comm = this.kernel.createComm('tlab');
     this.comm.onMsg = this.onCommMsg.bind(this);
     this.initKernel();
@@ -62,6 +67,15 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
 
   get ready() {
     return this._ready.promise;
+  }
+
+  async fetch(name: string, uuid: string) {
+    const msg = await this.command('fetch', { name, uuid });
+    return msg.content.data;
+  }
+
+  sendPatch(uuid: string, patch: IJSONPatchOperation<any>[]): void {
+    this.command('patch', patch, uuid, false);
   }
 
   /**
@@ -78,40 +92,32 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     this.comm?.open(undefined, { method: 'open', reqId });
   }
 
-  async fetch(name: string, uuid: string) {
-    // const listenerId = this.listeners.add(
-    //   msg => msg.metadata.uuid === uuid && msg.metadata.method === 'update',
-    //   msg => {
-    //     const obj = this.objects.get(uuid);
-    //     if (obj) {
-    //       const newState = msg.content.data as any;
-    //       obj.data = { ...obj.data, ...newState };
-    //       this.signal.emit(obj);
-    //     } else {
-    //       this.listeners.remove(listenerId);
-    //     }
-    //   }
-    // );
-    const msg = await this.command('fetch', { name, uuid });
-    return msg.content.data;
-  }
-
   /**
    * Send a command to the kernel.
    * @param method
    * @param payload
+   * @param uuid
+   * @param withReply
    * @returns Result message.
    */
-  private async command(method: string, payload: any) {
+  private async command(
+    method: string,
+    payload: any,
+    uuid: string | null = null,
+    withReply = true
+  ) {
     if (!this.comm) throw new Error('no comm');
     const delegate = new PromiseDelegate<KernelMessage.ICommMsgMsg>();
-    const reqId = UUID.uuid4();
-    this.cmdDelegates.set(reqId, delegate);
-    setTimeout(() => {
-      delegate.reject(new Error('timeout'));
-      this.cmdDelegates.delete(reqId);
-    }, 10000);
-    await this.comm.send(payload, { method, reqId }).done;
+    let reqId: string | null = null;
+    if (withReply) {
+      reqId = UUID.uuid4();
+      this.cmdDelegates.set(reqId, delegate);
+      setTimeout(() => {
+        delegate.reject(new Error('timeout'));
+        this.cmdDelegates.delete(reqId as string);
+      }, 10000);
+    }
+    await this.comm.send(payload, { method, reqId, uuid }).done;
     return delegate.promise;
   }
 
@@ -121,11 +127,16 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
    */
   private onCommMsg(msg: KernelMessage.ICommMsgMsg) {
     console.log('onCommMsg:', msg);
-    const { method, reqId } = msg.metadata as any as ICommMsgMeta;
+    const { method, reqId, uuid } = msg.metadata as unknown as ICommMsgMeta;
     if (method === 'reply' && reqId) {
       const promiseDelegate = this.cmdDelegates.get(reqId);
       promiseDelegate?.resolve(msg);
       this.cmdDelegates.delete(reqId);
+    } else if (method === 'patch' && uuid) {
+      this.store.patch(
+        uuid,
+        msg.content.data as unknown as IJSONPatchOperation<any>[]
+      );
     }
     this.listeners.resolve(msg);
   }

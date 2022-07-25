@@ -26,10 +26,12 @@ export interface ITLabStoreManager {
 
   /**
    * Get a kernel store handler for a kernel connection.
+   * @param store
    * @param kernel Session kernel connection.
    * @returns Kernel store handler promise.
    */
   getKernelStoreHandler(
+    store: ITLabStore,
     kernel: Kernel.IKernelConnection
   ): Promise<IKernelStoreHandler>;
 
@@ -72,14 +74,17 @@ export class TLabStoreManager implements ITLabStoreManager {
     this.kernelStoreHandlerClasses.set(language, handlerClass);
   }
 
-  async getKernelStoreHandler(kernel: Kernel.IKernelConnection) {
+  async getKernelStoreHandler(
+    store: ITLabStore,
+    kernel: Kernel.IKernelConnection
+  ) {
     let handler = this.kernelStoreHandlers.get(kernel.id);
     if (!handler) {
       const infos = await kernel.info;
       const language = infos.language_info.name;
       const klass = this.kernelStoreHandlerClasses.get(language);
       if (!klass) throw new Error('Language not supported');
-      handler = new klass(kernel) as IKernelStoreHandler;
+      handler = new klass(store, kernel) as IKernelStoreHandler;
       this.kernelStoreHandlers.set(kernel.id, handler);
     }
     return handler;

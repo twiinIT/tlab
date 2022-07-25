@@ -11,7 +11,7 @@ type JSONPatchOperationType =
   | 'copy'
   | 'test';
 
-interface IJSONPatchOperation<T> {
+export interface IJSONPatchOperation<T> {
   op: JSONPatchOperationType;
   path: string[];
   value?: T;

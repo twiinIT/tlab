@@ -8,7 +8,7 @@ import { Signal } from '@lumino/signaling';
 import { useEffect } from 'react';
 import { IKernelStoreHandler } from './handler';
 import { ITLabStoreManager } from './manager';
-import { Model } from './models';
+import { IJSONPatchOperation, Model } from './models';
 
 interface IStoreObject {
   name: string;
@@ -44,6 +44,13 @@ export interface ITLabStore {
    * @returns Variable promise.
    */
   fetch(name: string): Promise<any>;
+
+  /**
+   * Patch a object in store.
+   * @param uuid UUID of the object.
+   * @param patch JSON patch.
+   */
+  patch(uuid: string, patch: IJSONPatchOperation<any>[]): void;
 }
 
 /**
@@ -77,6 +84,7 @@ export class TLabStore implements ITLabStore {
     const kernel = this.sessionContext.session?.kernel;
     if (kernel) {
       this.kernelStoreHandler = await this.manager.getKernelStoreHandler(
+        this,
         kernel
       );
       await this.kernelStoreHandler.ready;
@@ -91,7 +99,10 @@ export class TLabStore implements ITLabStore {
     const rawObj = await this.kernelStoreHandler?.fetch(name, uuid);
 
     const data = this.manager.parseModel(rawObj);
-    data.subscribe(v => console.log('front change:', uuid, v));
+    data.subscribe(v => {
+      console.log('front change:', uuid, [v]);
+      this.kernelStoreHandler?.sendPatch(uuid, [v]);
+    });
     Reflect.set(window, name, data);
 
     const storeObj: IStoreObject = { name, uuid, data };
@@ -99,6 +110,36 @@ export class TLabStore implements ITLabStore {
     this.signal.emit(storeObj);
 
     return storeObj;
+  }
+
+  patch(uuid: string, patch: IJSONPatchOperation<any>[]): void {
+    const obj = this.objects.get(uuid);
+    if (!obj) throw new Error('Object not found');
+    patch.forEach(p => {
+      const path = p.path;
+      let parent = obj.data;
+      for (let i = 0; i < path.length - 1; i++) {
+        parent = Reflect.get(parent, path[i]);
+      }
+      switch (p.op) {
+        case 'add':
+        case 'replace':
+          Reflect.set(parent, path[path.length - 1], p.value);
+          break;
+        case 'remove':
+          Reflect.deleteProperty(parent, path[path.length - 1]);
+          break;
+        case 'move':
+          break;
+        case 'copy':
+          break;
+        case 'test':
+          break;
+        default:
+          throw new Error('Unknown operation');
+      }
+    });
+    this.signal.emit(obj);
   }
 }
 
