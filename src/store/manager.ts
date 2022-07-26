@@ -12,6 +12,13 @@ export const ITLabStoreManager = new Token<ITLabStoreManager>(
   'tlab:ITLabStoreManager'
 );
 
+type KerStoreHandlerCls = new (
+  store: ITLabStore,
+  kernel: Kernel.IKernelConnection
+) => IKernelStoreHandler;
+
+type ModelCls = (new () => Model) & { _modelName: string };
+
 /**
  * Store manager. Registers kernel store handlers (language support) and data models.
  * Manages stores, kernel store handles and serialization.
@@ -22,7 +29,10 @@ export interface ITLabStoreManager {
    * @param language JupyterLab language string.
    * @param handlerClass
    */
-  registerKernelStoreHandler(language: string, handlerClass: any): void;
+  registerKernelStoreHandler(
+    language: string,
+    handlerClass: KerStoreHandlerCls
+  ): void;
 
   /**
    * Get a kernel store handler for a kernel connection.
@@ -37,16 +47,15 @@ export interface ITLabStoreManager {
 
   /**
    * Register a data model.
-   * @param id
    * @param model
    */
-  registerModel(id: string, model: any): void;
+  registerModel(model: ModelCls): void;
 
   /**
    * Get a data model
    * @param id
    */
-  getModel(id: string): any;
+  getModel(id: string): ModelCls;
 
   /**
    * Deserialize a data model.
@@ -64,42 +73,55 @@ export interface ITLabStoreManager {
  * ITLabStoreManager implementation.
  */
 export class TLabStoreManager implements ITLabStoreManager {
-  private kernelStoreHandlerClasses = new Map<string, any>();
-  private kernelStoreHandlers = new Map<string, IKernelStoreHandler>();
-  private dataModels = new Map<string, any>();
+  private kerStoreHandlerCls = new Map<string, KerStoreHandlerCls>();
+  private kerStoreHandlers = new Map<string, IKernelStoreHandler>();
+  private dataModels = new Map<string, ModelCls>();
 
   constructor(private app: JupyterFrontEnd) {}
 
-  registerKernelStoreHandler(language: string, handlerClass: any) {
-    this.kernelStoreHandlerClasses.set(language, handlerClass);
+  registerKernelStoreHandler(
+    language: string,
+    handlerClass: KerStoreHandlerCls
+  ) {
+    this.kerStoreHandlerCls.set(language, handlerClass);
   }
 
   async getKernelStoreHandler(
     store: ITLabStore,
     kernel: Kernel.IKernelConnection
   ) {
-    let handler = this.kernelStoreHandlers.get(kernel.id);
+    let handler = this.kerStoreHandlers.get(kernel.id);
     if (!handler) {
       const infos = await kernel.info;
       const language = infos.language_info.name;
-      const klass = this.kernelStoreHandlerClasses.get(language);
+      const klass = this.kerStoreHandlerCls.get(language);
       if (!klass) throw new Error('Language not supported');
-      handler = new klass(store, kernel) as IKernelStoreHandler;
-      this.kernelStoreHandlers.set(kernel.id, handler);
+      handler = new klass(store, kernel);
+      this.kerStoreHandlers.set(kernel.id, handler);
     }
     return handler;
   }
 
-  registerModel(id: string, model: any) {
-    this.dataModels.set(id, model);
+  registerModel(model: ModelCls) {
+    this.dataModels.set(model._modelName, model);
   }
 
   getModel(id: string) {
-    return this.dataModels.get(id);
+    const m = this.dataModels.get(id);
+    if (!m) throw new Error('Model not registered');
+    return m;
   }
 
   parseModel(obj: any) {
-    return Model.parseModel(this.dataModels, obj);
+    const modelClass = this.getModel(obj._modelName);
+    const model = new modelClass();
+    for (const key of Reflect.ownKeys(obj)) {
+      if (key === '_modelName') continue;
+      let value = obj[key];
+      if (value._modelName) value = this.parseModel(value);
+      Reflect.set(model, key, value);
+    }
+    return model;
   }
 
   newStore(): ITLabStore {

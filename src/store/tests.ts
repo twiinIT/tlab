@@ -4,14 +4,14 @@
 import { Model, sync } from './models';
 
 export class Person extends Model {
-  _modelName = 'Person';
+  static _modelName = 'Person';
   @sync name!: string;
   @sync age!: number;
   @sync isStudent!: boolean;
 }
 
 export class Family extends Model {
-  _modelName = 'Family';
+  static _modelName = 'Family';
   @sync name!: string;
   @sync mother!: Person;
   @sync father!: Person;

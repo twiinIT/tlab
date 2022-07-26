@@ -17,8 +17,8 @@ export const labStoreManagerPlugin: JupyterFrontEndPlugin<ITLabStoreManager> = {
   provides: ITLabStoreManager,
   activate: (app: JupyterFrontEnd) => {
     const manager = new TLabStoreManager(app);
-    manager.registerModel('Person', Person);
-    manager.registerModel('Family', Family);
+    manager.registerModel(Person);
+    manager.registerModel(Family);
     return manager;
   }
 };
