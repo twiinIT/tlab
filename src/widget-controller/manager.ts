@@ -19,6 +19,8 @@ interface IControllerDict<T extends Model> {
   [componentName: string]: Controller<T>;
 }
 
+type ModelCls = (new () => Model) & { _modelName: string };
+
 export interface ITLabCtrlManager {
   registerController<T extends Model>(
     modelName: string,
@@ -27,11 +29,19 @@ export interface ITLabCtrlManager {
   ): void;
 
   getControllers<T extends Model>(modelName: string): IControllerDict<T>;
+
+  /**
+   * Register a instantiable data model.
+   * @param modelCls Model class.
+   */
+  registerModel(modelCls: ModelCls): void;
+
+  getModels(): { [key: string]: ModelCls };
 }
 
 export class TLabCtrlManager implements ITLabCtrlManager {
-  private ctrlMap: { [modelName: string]: IControllerDict<any> | undefined } =
-    {};
+  private ctrlMap: { [name: string]: IControllerDict<any> | undefined } = {};
+  private modelMap: { [name: string]: ModelCls } = {};
 
   registerController<T extends Model>(
     modelName: string,
@@ -46,5 +56,13 @@ export class TLabCtrlManager implements ITLabCtrlManager {
 
   getControllers<T extends Model>(modelName: string): IControllerDict<T> {
     return this.ctrlMap[modelName] ?? {};
+  }
+
+  registerModel(modelCls: ModelCls) {
+    this.modelMap[modelCls._modelName] = modelCls;
+  }
+
+  getModels() {
+    return this.modelMap;
   }
 }

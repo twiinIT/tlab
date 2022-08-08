@@ -51,12 +51,20 @@ export interface ITLabStore {
   connect(): Promise<void>;
 
   /**
-   * Fetch a variable from the kernel store.
+   * Fetch a variable from the kernel store and add it to the front store.
    * Its data model should be supported registered in store manager.
    * @param name Name of the variable in kernel.
    * @returns Variable promise.
    */
   fetch(name: string): Promise<any>;
+
+  /**
+   * Add a new model to the store.
+   * @param name
+   * @param model
+   * @param uuid Do not set if the model is instantiated from the front end.
+   */
+  add<T extends Model>(name: string, model: T, uuid?: string): IStoreObject<T>;
 
   /**
    * Patch a object in store.
@@ -124,15 +132,25 @@ export class TLabStore implements ITLabStore {
     // Parse the model
     const data = this.manager.parseModel(rawObj);
     // Subscribe to changes
+    return this.add(name, data, uuid);
+  }
+
+  add<T extends Model>(name: string, data: T, uuid?: string) {
+    let shouldAddInKernel = false;
+    if (!uuid) {
+      uuid = UUID.uuid4();
+      shouldAddInKernel = true;
+    }
+
     data.subscribe(v => {
       console.log('front patch:', uuid, v);
-      if (!v._private) this.kernelStoreHandler?.sendPatch(uuid, [v]);
+      if (!v._private) this.kernelStoreHandler?.sendPatch(uuid as string, [v]);
       this.signal.emit(storeObj);
     });
     Reflect.set(window, name, data);
 
     // Store the object and emit signal
-    const storeObj: IStoreObject<any> = { name, uuid, data };
+    const storeObj: IStoreObject<T> = { name, uuid, data };
     this.objects.set(uuid, storeObj);
     this.signal.emit(storeObj);
 

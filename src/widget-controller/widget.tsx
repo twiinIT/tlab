@@ -20,12 +20,58 @@ export function ControllerWidget({
 
   return (
     <div>
+      <h1>Controller Widget</h1>
+      <h2>Instantiate a new model</h2>
+      <Creator store={store} ctrlManager={ctrlManager} />
+      <h2>Add a control</h2>
       <Selector
         store={store}
         ctrlManager={ctrlManager}
         onAdd={e => setChildren([...children, e])}
       />
+      <h2>Controls</h2>
       {children}
+    </div>
+  );
+}
+
+function Creator({
+  store,
+  ctrlManager
+}: {
+  store: ITLabStore;
+  ctrlManager: ITLabCtrlManager;
+}) {
+  const [modelName, setModelName] = useState('');
+  const [name, setName] = useState('');
+  const models = useMemo(() => ctrlManager.getModels(), [ctrlManager]);
+
+  const onSubmit: React.FormEventHandler<HTMLFormElement> = e => {
+    e.preventDefault();
+    const model = new models[modelName]();
+    store.add(name, model);
+    setModelName('');
+    setName('');
+  };
+
+  return (
+    <div>
+      <form onSubmit={onSubmit}>
+        <select value={modelName} onChange={e => setModelName(e.target.value)}>
+          <option value="">Select a model</option>
+          {Object.keys(models).map(name => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+        />
+        <input type="submit" />
+      </form>
     </div>
   );
 }
@@ -46,7 +92,6 @@ function Selector({
   }>({});
 
   useStoreSignal(store, store => {
-    console.log('store changed');
     const opts: { [key: string]: IFilterResult<Model> } = {};
     for (const res of store.filter()) {
       opts[[res.name, ...res.path].join('.')] = res;

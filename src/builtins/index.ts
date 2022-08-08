@@ -25,7 +25,9 @@ export const labBuiltinsPlugin: JupyterFrontEndPlugin<void> = {
     // register builtins models
     for (const model of Object.values(models)) {
       storeManager.registerModel(model);
+      ctrlManager.registerModel(model);
     }
+
     // register controller widgets
     // TODO: something cleaner than this
     ctrlManager.registerController(
