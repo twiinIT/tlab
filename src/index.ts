@@ -6,8 +6,8 @@ import { labFrontManagerPlugin } from './front';
 import { labPythonPlugin } from './python';
 import { labStoreManagerPlugin } from './store';
 import { labWidgetCtrlPlugin } from './widget-controller';
+import { labWidgetKernelPlugin } from './widget-kernel';
 import { labWidgetPlotlyPlugin } from './widget-plotly';
-import { labWidgetStorePlugin } from './widget-store';
 
 /**
  * Exported extension plugins
@@ -18,8 +18,8 @@ const plugins = [
   labPythonPlugin,
   labStoreManagerPlugin,
   labWidgetCtrlPlugin,
-  labWidgetPlotlyPlugin,
-  labWidgetStorePlugin
+  labWidgetKernelPlugin,
+  labWidgetPlotlyPlugin
 ];
 
 export default plugins;

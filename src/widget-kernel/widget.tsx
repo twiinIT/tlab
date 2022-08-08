@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { ITLabWidgetProps } from '../front/manager';
 import { useStoreSignal } from '../store/store';
 
-export function StoreWidget({ manager, store }: ITLabWidgetProps) {
+export function KernelWidget({ manager, store }: ITLabWidgetProps) {
   const [name, setName] = useState('');
   const [objList, setObjList] = useState('');
 
@@ -15,7 +15,7 @@ export function StoreWidget({ manager, store }: ITLabWidgetProps) {
 
   return (
     <div>
-      <div>Store Widget</div>
+      <h1>Kernel Widget</h1>
       <button onClick={() => store.connect()}>Connect kernel</button>
       <form
         onSubmit={e => {
@@ -24,11 +24,14 @@ export function StoreWidget({ manager, store }: ITLabWidgetProps) {
           setName('');
         }}
       >
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-        />
+        <label>
+          Fetch
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
+        </label>
         <input type="submit" />
       </form>
       <pre>{objList}</pre>

@@ -46,7 +46,8 @@ flowchart
 **Packages:**
 
 - [Front](../src/front/)
-- [Store widget](../src/widget-store/)
+- [Controller widget](../src/widget-controller/)
+- [Kernel widget](../src/widget-kernel/)
 - [Plotly widget](../src/widget-plotly/)
 
 TLab inferface is based on [FlexLayout](https://github.com/caplin/FlexLayout). Each widget is registered in the `ITLabFrontManager` and consume models from the store.
