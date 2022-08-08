@@ -40,6 +40,7 @@ export interface ITLabCtrlManager {
 }
 
 export class TLabCtrlManager implements ITLabCtrlManager {
+  // TODO: replace w/ Map?
   private ctrlMap: { [name: string]: IControllerDict<any> | undefined } = {};
   private modelMap: { [name: string]: ModelCls } = {};
 
@@ -59,7 +60,9 @@ export class TLabCtrlManager implements ITLabCtrlManager {
   }
 
   registerModel(modelCls: ModelCls) {
-    this.modelMap[modelCls._modelName] = modelCls;
+    if (modelCls._modelName) {
+      this.modelMap[modelCls._modelName] = modelCls;
+    }
   }
 
   getModels() {

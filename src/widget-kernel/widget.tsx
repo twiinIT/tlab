@@ -3,15 +3,9 @@
 
 import React, { useState } from 'react';
 import { ITLabWidgetProps } from '../front/manager';
-import { useStoreSignal } from '../store/store';
 
 export function KernelWidget({ manager, store }: ITLabWidgetProps) {
   const [name, setName] = useState('');
-  const [objList, setObjList] = useState('');
-
-  useStoreSignal(store, store => {
-    setObjList(JSON.stringify([...store.objects.values()], undefined, 2));
-  });
 
   return (
     <div>
@@ -34,7 +28,6 @@ export function KernelWidget({ manager, store }: ITLabWidgetProps) {
         </label>
         <input type="submit" />
       </form>
-      <pre>{objList}</pre>
     </div>
   );
 }

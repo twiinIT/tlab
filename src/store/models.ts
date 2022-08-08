@@ -149,7 +149,7 @@ export abstract class Model extends Subject<IJSONPatchOperation<any>> {
   }
 
   /**
-   * Set an synced attribute without emmitting a patch operation.
+   * Set an synced attribute.
    * @param key Synced key.
    * @param value New value.
    * @param _private

@@ -17,10 +17,17 @@ export function ControllerWidget({
   ctrlManager
 }: ControllerWidgetProps) {
   const [children, setChildren] = useState<JSX.Element[]>([]);
+  const [objList, setObjList] = useState('');
+
+  useStoreSignal(store, store => {
+    setObjList(JSON.stringify([...store.objects.values()], undefined, 2));
+  });
 
   return (
     <div>
       <h1>Controller Widget</h1>
+      <h2>Import/Export</h2>
+      <Serializer store={store} />
       <h2>Instantiate a new model</h2>
       <Creator store={store} ctrlManager={ctrlManager} />
       <h2>Add a control</h2>
@@ -31,6 +38,45 @@ export function ControllerWidget({
       />
       <h2>Controls</h2>
       {children}
+      <h2>Store objects</h2>
+      <pre>{objList}</pre>
+    </div>
+  );
+}
+
+function Serializer({ store }: { store: ITLabStore }) {
+  const onImport: React.ChangeEventHandler<HTMLInputElement> = e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const data = JSON.parse(reader.result as string);
+      store.importAll(data);
+    };
+    reader.readAsText(file);
+  };
+
+  const onExport = () => {
+    const data = store.exportAll();
+    const blob = new Blob([JSON.stringify(data)], {
+      type: 'application/json'
+    });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tlab_store.json';
+    a.click();
+    a.remove();
+  };
+
+  return (
+    <div>
+      <label>
+        Import
+        <input type="file" onChange={onImport} />
+      </label>
+      <button onClick={() => onExport()}>Export</button>
     </div>
   );
 }

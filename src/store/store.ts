@@ -81,6 +81,10 @@ export interface ITLabStore {
   filter<T extends Model, U extends (new () => T)[] = (new () => T)[]>(
     ...modelCls: U
   ): Generator<IFilterResult<T>>;
+
+  importAll(exportData: { name: string; data: any }[]): void;
+
+  exportAll(): { name: string; data: any }[];
 }
 
 /**
@@ -131,7 +135,7 @@ export class TLabStore implements ITLabStore {
 
     // Parse the model
     const data = this.manager.parseModel(rawObj);
-    // Subscribe to changes
+
     return this.add(name, data, uuid);
   }
 
@@ -142,6 +146,7 @@ export class TLabStore implements ITLabStore {
       shouldAddInKernel = true;
     }
 
+    // Subscribe to changes
     data.subscribe(v => {
       console.log('front patch:', uuid, v);
       if (!v._private) this.kernelStoreHandler?.sendPatch(uuid as string, [v]);
@@ -221,6 +226,21 @@ export class TLabStore implements ITLabStore {
         yield { uuid: obj.uuid, name: obj.name, path, data: data as T };
       }
     }
+  }
+
+  importAll(exportData: { name: string; data: any }[]) {
+    for (const { name, data } of exportData) {
+      const parsed = this.manager.parseModel(data);
+      this.add(name, parsed);
+    }
+  }
+
+  exportAll() {
+    const data = [];
+    for (const obj of this.objects.values()) {
+      data.push({ name: obj.name, data: obj.data });
+    }
+    return data;
   }
 }
 
