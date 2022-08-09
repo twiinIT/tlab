@@ -10,17 +10,26 @@ import { ITLabStore } from '../store/store';
 
 const TARGET_NAME = 'tlab';
 
+/**
+ * Comm msg metadata.
+ */
 interface ICommMsgMeta {
   method: string;
   reqId?: string;
   uuid?: string;
 }
 
+/**
+ * Listener for comm messages. Unused.
+ */
 interface ICommListener {
   check: (msg: KernelMessage.ICommMsgMsg) => boolean;
   handler: (msg: KernelMessage.ICommMsgMsg) => void;
 }
 
+/**
+ * Registry of comm listeners. Unused.
+ */
 class CommListeners {
   private map = new Map<string, ICommListener>();
 

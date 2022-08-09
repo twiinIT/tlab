@@ -118,6 +118,7 @@ export class TLabStoreManager implements ITLabStoreManager {
     for (const key of Reflect.ownKeys(obj)) {
       if (key === '_modelName') continue;
       let value = obj[key];
+      // recurse if _modelName is present
       if (value._modelName) value = this.parseModel(value);
       Reflect.set(model, key, value);
     }

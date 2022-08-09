@@ -9,7 +9,10 @@ export const ITLabFrontManager = new Token<ITLabFrontManager>(
 );
 
 /**
- * TLab front manager. Registers widgets and provides access to them.
+ * TLab front manager.
+ *
+ * Saves widgets and provides access to them.
+ * TODO: workspace saves.
  */
 export interface ITLabFrontManager {
   /**
@@ -39,7 +42,7 @@ export interface ITLabWidget {
   name: string;
 
   /**
-   * Widget component factory.
+   * React component.
    * @param props
    * @returns React element.
    */
@@ -47,7 +50,7 @@ export interface ITLabWidget {
 }
 
 /**
- * Widget properties.
+ * Widget component props.
  */
 export interface ITLabWidgetProps {
   manager: ITLabFrontManager;

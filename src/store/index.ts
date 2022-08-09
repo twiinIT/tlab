@@ -6,7 +6,6 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { ITLabStoreManager, TLabStoreManager } from './manager';
-import { Family, Person } from './tests';
 
 /**
  * Store manager plugin.
@@ -17,8 +16,6 @@ export const labStoreManagerPlugin: JupyterFrontEndPlugin<ITLabStoreManager> = {
   provides: ITLabStoreManager,
   activate: (app: JupyterFrontEnd) => {
     const manager = new TLabStoreManager(app);
-    manager.registerModel(Person);
-    manager.registerModel(Family);
     return manager;
   }
 };

@@ -4,6 +4,7 @@
 declare module 'plotly.js/dist/plotly';
 
 declare module 'react-chart-editor' {
+  // TODO: remplace with real types
   export default function PlotlyEditor(props: {
     children?;
     layout?;
