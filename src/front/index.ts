@@ -18,6 +18,7 @@ namespace CommandIDs {
 
 /**
  * Front manager plugin.
+ * Registers the command and the front manager.
  */
 export const labFrontManagerPlugin: JupyterFrontEndPlugin<ITLabFrontManager> = {
   id: 'tlab:front_manager',

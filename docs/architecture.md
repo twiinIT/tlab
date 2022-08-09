@@ -1,11 +1,6 @@
-# twiinIT Lab Architecture
+# Architecture
 
 ## Overview
-
-- Visualization widgets are registered in `TLabFrontManager`.
-- These widgets use available data in store.
-- Stores are managed by `ITLabStoreManager`. They have a front part `TLabStore` exposed to widgets and a kernel language-dependant side: a kernel store handler implementing `IKernelStoreHandler` and the in-kernel store.
-- Kernel stores are fed by data sources.
 
 ```mermaid
 flowchart
@@ -40,21 +35,61 @@ flowchart
     end
     subgraph Kernel1
         IKernelStoreHandler1 ..- |comm| KernelStore1
-        DataSource1 --> |feeds| KernelStore1
-        DataSource2 --> |feeds| KernelStore1
     end
     subgraph Kernel2
         IKernelStoreHandler2 ..- |comm| KernelStore2
-        DataSource3 --> |feeds| KernelStore2
     end
 ```
+
+### Front
+
+**Packages:**
+
+- [Front](../src/front/)
+- [Store widget](../src/widget-store/)
+- [Plotly widget](../src/widget-plotly/)
+
+TLab inferface is based on [FlexLayout](https://github.com/caplin/FlexLayout). Each widget is registered in the `ITLabFrontManager` and consume models from the store.
+
+### Store
+
+**Packages:**
+
+- [Store](../src/store/)
+- [Python plugin](../src/python/)
+- [Python module](../tlab/)
+
+The store exposes data models to the widgets.
+
+It is made of four entities: `ITLabStoreManager`, `ITLabStore`, `IKernelStoreHandler` on the frontend, and the store in kernel. The last two are kernel/language bounded.
+
+```mermaid
+flowchart LR
+    ITLabStoreManager .-> |instantiate| ITLabStore
+    ITLabStoreManager .-> |instantiate| IKernelStoreHandler
+    Widgets <--> ITLabStore
+    ITLabStore <--> IKernelStoreHandler
+    subgraph Kernel-dependant
+        IKernelStoreHandler <..-> |comm| KernelStore
+        subgraph Kernel
+            KernelStore
+        end
+    end
+```
+
+### Data models
+
+**Packages:**
+
+- [Built-in models – Front](../src/builtins/)
+- [Built-in models – Python](../tlab/builtins.py)
+
+Data models contains synced attributes.
+They are defined both in the frontend and kernel.
 
 ## Sequence diagrams
 
 ### Startup
-
-Core plugins include `labFrontManagerPlugin` and `labStoreManagerPlugin`.
-Other plugins include language support, data sources, models and widgets.
 
 ```mermaid
 sequenceDiagram
@@ -65,11 +100,9 @@ sequenceDiagram
     labFrontManagerPlugin ->> JupyterLab : register cmds
     labFrontManagerPlugin -->>- JupyterLab : ITLabFrontManager
     JupyterLab ->>+ anyLanguageSupportPlugin: activate(ITLabStoreManager)
-    anyLanguageSupportPlugin ->> labStoreManagerPlugin : register kernel store handler
-    anyLanguageSupportPlugin -->>- JupyterLab : ITLabLanguageSupport
-    JupyterLab ->>+ anyDataSourceModelPlugin : activate(ITLabStoreManager, ITLabLanguageSupport)
-    anyDataSourceModelPlugin ->> labStoreManagerPlugin : register models
-    anyDataSourceModelPlugin ->>- anyLanguageSupportPlugin : register datasources
+    anyLanguageSupportPlugin ->>- labStoreManagerPlugin : register kernel store handler
+    JupyterLab ->>+ anyModelPlugin : activate(ITLabStoreManager)
+    anyModelPlugin ->>- labStoreManagerPlugin : register models
     JupyterLab ->>+ anyWidgetPlugin : activate(ITLabFrontManager)
     anyWidgetPlugin ->>- labFrontManagerPlugin : register widgets
 ```
@@ -102,49 +135,47 @@ sequenceDiagram
     participant JupyterLab
     participant StoreWidget
     participant TLabStore
-    participant ITLabStoreManager
+    participant TLabStoreManager
     participant IKernelStoreHandler
     participant KernelStore
-    participant Datasources
     note right of User : Store conn
     TLabStore ->> User : kernel selection
     User -->> TLabStore : kernel choice
-    TLabStore ->> ITLabStoreManager : getKernelStoreHandler
+    TLabStore ->> TLabStoreManager : getKernelStoreHandler
     opt instantiate store backend if not present
-        ITLabStoreManager ->> IKernelStoreHandler : create
-        IKernelStoreHandler ->> JupyterLab : create conn
+        TLabStoreManager ->> IKernelStoreHandler : create
+        IKernelStoreHandler ->> JupyterLab : open comm and instantiate
         JupyterLab ->> KernelStore : instantiate
-        KernelStore ->> Datasources : add
-        IKernelStoreHandler --> KernelStore : conn
+        IKernelStoreHandler --> KernelStore : comm
     end
-    ITLabStoreManager -->> TLabStore : handler
+    TLabStoreManager -->> TLabStore : handler
 ```
 
-### Add variable
+### Add model
 
 ```mermaid
 sequenceDiagram
     actor User
     participant StoreWidget
     participant TLabStore
-    participant IKernelStoreHandler
+    participant TLabStoreManager
+    participant KernelStoreHandler
     participant KernelStore
     participant Kernel
-    participant BarDataSource
-    note right of User : Add variables
-    IKernelStoreHandler --> KernelStore : comm
-    User ->> KernelStore : "add `foo` to store"
+    note right of User : Add model
+    KernelStoreHandler --> KernelStore : comm
+    User ->> StoreWidget : "add `foo`"
+    StoreWidget ->> TLabStore : fetch(`foo`)
+    TLabStore ->> KernelStoreHandler : fetch(`foo`)
+    KernelStoreHandler ->> KernelStore : fetch(`foo`)
     KernelStore ->> Kernel : get `foo`
-    Kernel -->> KernelStore : foo, of type bar
-    KernelStore ->> BarDataSource : serialize foo
-    BarDataSource -->> TLabStore : serialized foo, type bar
-```
-
-```mermaid
-sequenceDiagram
-    TLabStore ->> ITLabStoreManager : deserialize foo, type bar
-    ITLabStoreManager ->> BarDataModel : deserialize foo
-    BarDataModel -->> TLabStore : foo in JS data model
+    Kernel -->> KernelStore: foo
+    KernelStore -->> KernelStoreHandler : foo.dict()
+    KernelStoreHandler -->> TLabStore : foo.dict()
+    TLabStore ->> TLabStoreManager : parse(foo.dict())
+    TLabStoreManager -->> TLabStore : foo
+    TLabStore -->> StoreWidget : signal.emit(foo)
+    StoreWidget -->> User : print(foo)
 ```
 
 ### Visualization
@@ -153,14 +184,12 @@ sequenceDiagram
 sequenceDiagram
     actor User
     participant TLab
-    participant VisuWidget
+    participant Widget
     participant TLabStore
     note right of User : Visualization
-    User ->> TLab : "add Visu"
-    TLab ->> VisuWidget : create
-    VisuWidget ->> TLabStore : getOfType(Type1)
-    TLabStore -->> VisuWidget: Type1[]
-    VisuWidget ->> TLabStore : getOfType(Type2)
-    TLabStore -->> VisuWidget : Type2[]
-    VisuWidget -->> User : ready
+    User ->> TLab : "add Widget"
+    TLab ->> Widget : create
+    Widget ->> TLabStore : filter(ModelClass)
+    TLabStore -->> Widget: Generator<ModelClass>
+    Widget -->> User : ready
 ```

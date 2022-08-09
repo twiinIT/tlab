@@ -16,6 +16,10 @@ _handlers = {}
 
 
 def on(name: str):
+    """
+    Handler decorator for comm events.
+    TODO: Something cleaner.
+    """
 
     def decorator(func: Callable[['TLabKernelStore', Any], None]):
         _handlers[name] = func
@@ -25,22 +29,25 @@ def on(name: str):
 
 
 class TLabKernelStore(rx.Subject):
+    """Python kernel store implementation."""
 
     def __init__(self, target='tlab'):
-        self.init_comm(target)
+        self._init_comm(target)
         self.models: Dict[str, Model] = {}
 
-    def init_comm(self, target):
+    def _init_comm(self, target):
+        """Initialize the comm."""
         self.shell = get_ipython()
-        self.shell.kernel.comm_manager.register_target(target, self.register)
+        self.shell.kernel.comm_manager.register_target(target, self._register)
 
-    def register(self, comm: 'Comm', open_msg):
+    def _register(self, comm: 'Comm', open_msg):
+        """When a comm is opened from the frontend."""
         self.comm = comm
-        comm.on_msg(self.on_msg)
+        comm.on_msg(self._on_msg)
         new_meta = dict(method='reply', reqId=open_msg['metadata']['reqId'])
         comm.send(None, new_meta)
 
-    def on_msg(self, msg):
+    def _on_msg(self, msg):
         try:
             method = msg['metadata']['method']
             if method in _handlers:
@@ -52,12 +59,20 @@ class TLabKernelStore(rx.Subject):
 
     @on('fetch')
     def get(self, msg):
+        # get model
+        # TODO: replace self.shell.user_ns with ??
         var_name = msg['content']['data']['name']
         var: 'Model' = self.shell.user_ns[var_name]
+
+        # get metadata
         uuid = msg['content']['data']['uuid']
         reqId = msg['metadata']['reqId']
+
+        # serialize and send
         state = var.dict()
         self.comm.send(state, dict(method='reply', reqId=reqId))
+
+        # subscribe to changes
         var.subscribe(on_next=partial(self.on_model_patch, uuid))
         self.models[uuid] = var
 
@@ -66,6 +81,7 @@ class TLabKernelStore(rx.Subject):
 
     @on('patch')
     def patch(self, msg):
+        """Apply a patch to a model."""
         uuid = msg['metadata']['uuid']
         var = self.models[uuid]
         patches = msg['content']['data']
@@ -78,6 +94,13 @@ class TLabKernelStore(rx.Subject):
             parent = var
             for p in path[:-1]:
                 parent = parent[p]
+
+            field = parent.__fields__[path[-1]]
+            serializer = field.field_info.extra.get('serializer', None)
+            if serializer is not None:
+                deserialize = serializer.deserialize
+                if deserialize is not None:
+                    value = deserialize(value)
 
             if op in ('add', 'replace'):
                 setattr(parent, path[-1], value)

@@ -21,7 +21,7 @@ import { ITLabStore } from '../store/store';
 import { ITLabFrontManager, ITLabWidget, ITLabWidgetProps } from './manager';
 
 /**
- * TLab Lumino widget wrapping TLab.
+ * TLab Lumino React widget wrapper.
  */
 export class TLabShellWidget extends ReactWidget {
   constructor(
@@ -42,6 +42,9 @@ export class TLabShellWidget extends ReactWidget {
   }
 }
 
+/**
+ * Flexlayout default layout.
+ */
 const DEFAULT_LAYOUT: IJsonModel = {
   global: {
     tabEnableRename: true,
@@ -59,6 +62,9 @@ const DEFAULT_LAYOUT: IJsonModel = {
   }
 };
 
+/**
+ * TLab main React component.
+ */
 function TLab({ manager, store }: ITLabWidgetProps) {
   const [model, setModel] = useState<Model>(Model.fromJson(DEFAULT_LAYOUT));
   const layoutRef = useRef<Layout>(null);
@@ -73,6 +79,7 @@ function TLab({ manager, store }: ITLabWidgetProps) {
           break;
 
         default: {
+          // Create widget from registry
           const widget = manager.widgets.get(id);
           component = widget?.component({ manager, store });
           break;
@@ -117,6 +124,9 @@ function TLab({ manager, store }: ITLabWidgetProps) {
   );
 }
 
+/**
+ * Widget menu.
+ */
 function WidgetMenu({
   widgets,
   addWidget
