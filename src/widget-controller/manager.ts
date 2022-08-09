@@ -60,9 +60,7 @@ export class TLabCtrlManager implements ITLabCtrlManager {
   }
 
   registerModel(modelCls: ModelCls) {
-    if (modelCls._modelName) {
-      this.modelMap[modelCls._modelName] = modelCls;
-    }
+    this.modelMap[modelCls._modelName] = modelCls;
   }
 
   getModels() {

@@ -109,6 +109,7 @@ export abstract class Model extends Subject<IJSONPatchOperation<any>> {
   /**
    * Model name. Should be something unique.
    * TODO: Fix the double declaration.
+   * TODO: Cannot define an abstract static field...
    */
   static _modelName: string;
   abstract _modelName: string;

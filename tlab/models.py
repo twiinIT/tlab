@@ -31,6 +31,7 @@ class Model(HasTraits):
     def subscribe(self, *args, **kwargs):
         return self._patch_subject.subscribe(*args, **kwargs)
 
+    # TODO: replace w/ operator
     def _value_changed(self, change):
         op = 'replace'
         path = [change['name']]

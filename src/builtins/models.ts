@@ -61,7 +61,8 @@ export class ArrayModel extends Model implements IValueModel<any[]> {
 }
 
 export class NDArrayModel extends Model implements IValueModel<NdArray> {
-  _modelName = 'NDArray';
+  static _modelName = 'NDArray';
+  _modelName = NDArrayModel._modelName;
 
   @sync({
     deserialize: ({ shape, data }) => {
