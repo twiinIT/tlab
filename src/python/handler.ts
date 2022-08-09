@@ -7,6 +7,7 @@ import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
 import { IJSONPatchOperation } from '../store/models';
 import { ITLabStore } from '../store/store';
+import { ITLabPythonManager } from './manager';
 
 const TARGET_NAME = 'tlab';
 
@@ -66,6 +67,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
   >();
 
   constructor(
+    private manager: ITLabPythonManager,
     private store: ITLabStore,
     private kernel: Kernel.IKernelConnection
   ) {
@@ -98,7 +100,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     await this.kernel.requestExecute({ code }).done;
     const reqId = UUID.uuid4();
     this.cmdDelegates.set(reqId, this._ready);
-    this.comm?.open(undefined, { method: 'open', reqId });
+    this.comm?.open(this.manager.getClasses(), { method: 'open', reqId });
   }
 
   /**

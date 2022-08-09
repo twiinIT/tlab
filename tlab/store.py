@@ -33,6 +33,7 @@ class TLabKernelStore(rx.Subject):
 
     def __init__(self, target='tlab'):
         self._init_comm(target)
+        self.classes: Dict[str, (str, str)] = {}
         self.models: Dict[str, Model] = {}
 
     def _init_comm(self, target):
@@ -44,8 +45,14 @@ class TLabKernelStore(rx.Subject):
         """When a comm is opened from the frontend."""
         self.comm = comm
         comm.on_msg(self._on_msg)
+
+        # register model classes
+        msg_data = open_msg['content']['data']
+        for model_name, (module_path, model_class) in msg_data:
+            self.classes[model_name] = (module_path, model_class)
+
         new_meta = dict(method='reply', reqId=open_msg['metadata']['reqId'])
-        comm.send(None, new_meta)
+        comm.send(msg_data, new_meta)
 
     def _on_msg(self, msg):
         try:
