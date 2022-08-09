@@ -40,7 +40,7 @@ version = (
     .replace("-alpha.", "a")
     .replace("-beta.", "b")
     .replace("-rc.", "rc")
-) 
+)
 
 setup_args = dict(
     name=name,
@@ -72,7 +72,8 @@ setup_args = dict(
         "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
     ],
     install_requires=[
-        "pandas",
+        "reactivex",
+        "pyportrait @ git+https://github.com/twiinIT/pyportrait.git@09ecc69b0747705c6c3cabf11d78897b6aa67ea0",
     ],
 )
 

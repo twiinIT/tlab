@@ -3,15 +3,17 @@
 
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { SessionContext, sessionContextDialogs } from '@jupyterlab/apputils';
+import { UUID } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import { useEffect } from 'react';
 import { IKernelStoreHandler } from './handler';
 import { ITLabStoreManager } from './manager';
+import { IJSONPatchOperation, Model } from './models';
 
-export interface IStoreObject {
+interface IStoreObject {
   name: string;
-  data: any;
-  modelId: string;
+  uuid: string;
+  data: Model;
 }
 
 /**
@@ -27,7 +29,7 @@ export interface ITLabStore {
   /**
    * Signal for when an object is modified to the store.
    */
-  signal: Signal<this, void>;
+  signal: Signal<this, IStoreObject>;
 
   /**
    * Connect store to kernel, obtain kernel store handler
@@ -42,16 +44,24 @@ export interface ITLabStore {
    * @returns Variable promise.
    */
   fetch(name: string): Promise<any>;
+
+  /**
+   * Patch a object in store.
+   * @param uuid UUID of the object.
+   * @param patch JSON patch.
+   */
+  patch(uuid: string, patch: IJSONPatchOperation<any>[]): void;
 }
 
 /**
  * ITLabStore implementation.
  */
 export class TLabStore implements ITLabStore {
-  private sessionContext: SessionContext;
-  private kernelStoreHandler: IKernelStoreHandler | undefined;
-  objects: Map<string, IStoreObject>;
-  signal: Signal<this, void>;
+  objects = new Map<string, IStoreObject>();
+  signal = new Signal<this, IStoreObject>(this);
+
+  private sessionContext;
+  private kernelStoreHandler?: IKernelStoreHandler;
 
   constructor(
     private app: JupyterFrontEnd,
@@ -63,20 +73,18 @@ export class TLabStore implements ITLabStore {
       specsManager: serviceManager.kernelspecs,
       name: 'twiinIT Lab'
     });
-    this.objects = new Map();
-    this.signal = new Signal(this);
   }
 
-  async connect(): Promise<void> {
+  async connect() {
     // User kernel selection
     const val = await this.sessionContext.initialize();
-    if (val) {
-      await sessionContextDialogs.selectKernel(this.sessionContext);
-    }
+    if (val) await sessionContextDialogs.selectKernel(this.sessionContext);
+
     // Connect store to the kernel
     const kernel = this.sessionContext.session?.kernel;
     if (kernel) {
       this.kernelStoreHandler = await this.manager.getKernelStoreHandler(
+        this,
         kernel
       );
       await this.kernelStoreHandler.ready;
@@ -84,22 +92,54 @@ export class TLabStore implements ITLabStore {
     }
   }
 
-  async fetch(name: string): Promise<any> {
-    if (!this.kernelStoreHandler) {
-      throw new Error('Kernel store not connected');
-    }
-    const { obj, modelId } = await this.kernelStoreHandler.fetch(name);
-    const model = this.manager.getModel(modelId);
-    if (!model) {
-      throw new Error('Data model not registered');
-    }
-    const parsed = await model.deserialize(obj);
-    const wrapped = await this.kernelStoreHandler.wrap(name, modelId, parsed);
-    const object: IStoreObject = { name, data: wrapped, modelId };
-    this.objects.set(name, object);
-    this.signal.emit();
-    console.log(object);
-    return object;
+  async fetch(name: string) {
+    if (!this.kernelStoreHandler) throw new Error('Kernel store not connected');
+
+    const uuid = UUID.uuid4();
+    const rawObj = await this.kernelStoreHandler?.fetch(name, uuid);
+
+    const data = this.manager.parseModel(rawObj);
+    data.subscribe(v => {
+      console.log('front change:', uuid, [v]);
+      this.kernelStoreHandler?.sendPatch(uuid, [v]);
+    });
+    Reflect.set(window, name, data);
+
+    const storeObj: IStoreObject = { name, uuid, data };
+    this.objects.set(uuid, storeObj);
+    this.signal.emit(storeObj);
+
+    return storeObj;
+  }
+
+  patch(uuid: string, patch: IJSONPatchOperation<any>[]): void {
+    const obj = this.objects.get(uuid);
+    if (!obj) throw new Error('Object not found');
+    patch.forEach(p => {
+      const path = p.path;
+      let parent = obj.data;
+      for (let i = 0; i < path.length - 1; i++) {
+        parent = Reflect.get(parent, path[i]);
+      }
+      switch (p.op) {
+        case 'add':
+        case 'replace':
+          Reflect.set(parent, path[path.length - 1], p.value);
+          break;
+        case 'remove':
+          Reflect.deleteProperty(parent, path[path.length - 1]);
+          break;
+        case 'move':
+          break;
+        case 'copy':
+          break;
+        case 'test':
+          break;
+        default:
+          throw new Error('Unknown operation');
+      }
+    });
+    this.signal.emit(obj);
   }
 }
 
@@ -110,7 +150,7 @@ export class TLabStore implements ITLabStore {
  */
 export function useStoreSignal(
   store: ITLabStore,
-  callback: (store: ITLabStore) => void
+  callback: (store: ITLabStore, obj: IStoreObject) => void
 ) {
   useEffect(() => {
     store.signal.connect(callback);

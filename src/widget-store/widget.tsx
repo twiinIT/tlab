@@ -3,9 +3,15 @@
 
 import React, { useState } from 'react';
 import { ITLabWidgetProps } from '../front/manager';
+import { useStoreSignal } from '../store/store';
 
 export function StoreWidget({ manager, store }: ITLabWidgetProps): JSX.Element {
   const [name, setName] = useState('');
+  const [objList, setObjList] = useState('');
+
+  useStoreSignal(store, () => {
+    setObjList(JSON.stringify([...store.objects.values()], undefined, 2));
+  });
 
   return (
     <div>
@@ -25,6 +31,7 @@ export function StoreWidget({ manager, store }: ITLabWidgetProps): JSX.Element {
         />
         <input type="submit" />
       </form>
+      <pre>{objList}</pre>
     </div>
   );
 }

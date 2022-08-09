@@ -16,7 +16,7 @@ import {
   TabSetNode
 } from 'flexlayout-react';
 import 'flexlayout-react/style/light.css';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { ITLabStore } from '../store/store';
 import { ITLabFrontManager, ITLabWidget, ITLabWidgetProps } from './manager';
 
@@ -37,7 +37,7 @@ export class TLabShellWidget extends ReactWidget {
     this.title.icon = listIcon;
   }
 
-  render(): JSX.Element {
+  render() {
     return <TLab manager={this.manager} store={this.store} />;
   }
 }
@@ -63,57 +63,48 @@ function TLab({ manager, store }: ITLabWidgetProps) {
   const [model, setModel] = useState<Model>(Model.fromJson(DEFAULT_LAYOUT));
   const layoutRef = useRef<Layout>(null);
 
-  const factory = useCallback(
-    (node: TabNode) => {
-      const id = node.getComponent();
-      if (id) {
-        let component;
-        switch (id) {
-          case 'welcome':
-            component = <h1>Welcome on twiinIT Lab</h1>;
-            break;
+  const factory = (node: TabNode) => {
+    const id = node.getComponent();
+    if (id) {
+      let component;
+      switch (id) {
+        case 'welcome':
+          component = <h1>Welcome on twiinIT Lab</h1>;
+          break;
 
-          default: {
-            const widget = manager.widgets.get(id);
-            component = widget?.component({ manager, store });
-            break;
-          }
+        default: {
+          const widget = manager.widgets.get(id);
+          component = widget?.component({ manager, store });
+          break;
         }
-        return component;
       }
-    },
-    [manager, store]
-  );
+      return component;
+    }
+  };
 
-  const addWidget = useCallback(
-    (tabSetNode: TabSetNode, id: string) => {
-      const layout = layoutRef.current;
-      const widget = manager.widgets.get(id);
-      if (layout && widget) {
-        layout.addTabToTabSet(tabSetNode.getId(), {
-          type: 'tab',
-          name: widget.name,
-          component: widget.id
-        });
-      }
-    },
-    [manager.widgets]
-  );
+  const addWidget = (tabSetNode: TabSetNode, id: string) => {
+    const layout = layoutRef.current;
+    const widget = manager.widgets.get(id);
+    if (layout && widget) {
+      layout.addTabToTabSet(tabSetNode.getId(), {
+        type: 'tab',
+        name: widget.name,
+        component: widget.id
+      });
+    }
+  };
 
-  const onRenderTabSet = useCallback(
-    (
-      tabSetNode: TabSetNode | BorderNode,
-      renderValues: ITabSetRenderValues
-    ) => {
-      renderValues.stickyButtons.push(
-        <WidgetMenu
-          widgets={manager.widgets}
-          addWidget={addWidget.bind(null, tabSetNode as TabSetNode)}
-        />
-      );
-    },
-    [addWidget, manager.widgets]
-  );
+  const onRenderTabSet = (
+    tabSetNode: TabSetNode | BorderNode,
+    renderValues: ITabSetRenderValues
+  ) => {
+    renderValues.stickyButtons.push(
+      <WidgetMenu
+        widgets={manager.widgets}
+        addWidget={addWidget.bind(null, tabSetNode as TabSetNode)}
+      />
+    );
+  };
 
   return (
     <Layout
@@ -146,15 +137,12 @@ function WidgetMenu({
     return options;
   }, [widgets]);
 
-  const onChange = useCallback(
-    e => {
-      e.preventDefault();
-      const id = e.target.value;
-      addWidget(id);
-      setValue('');
-    },
-    [addWidget]
-  );
+  const onChange: React.ChangeEventHandler<HTMLSelectElement> = e => {
+    e.preventDefault();
+    const id = e.target.value;
+    addWidget(id);
+    setValue('');
+  };
 
   return (
     <select value={value} onChange={onChange}>
