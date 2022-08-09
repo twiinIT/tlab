@@ -119,7 +119,7 @@ export class TLabStoreManager implements ITLabStoreManager {
       if (key === '_modelName') continue;
       let value = obj[key];
       // recurse if _modelName is present
-      if (value._modelName) value = this.parseModel(value);
+      if (value && value._modelName) value = this.parseModel(value);
       Reflect.set(model, key, value);
     }
     return model;

@@ -13,10 +13,20 @@ import { IJSONPatchOperation, Model } from './models';
 /**
  * Object in store.
  */
-interface IStoreObject {
+export interface IStoreObject<T extends Model> {
   name: string;
   uuid: string;
-  data: Model;
+  data: T;
+}
+
+/**
+ * Filtering result.
+ */
+export interface IFilterResult<T extends Model> {
+  uuid: string;
+  name: string;
+  path: string[];
+  data: T;
 }
 
 /**
@@ -27,12 +37,12 @@ export interface ITLabStore {
   /**
    * Objects in store.
    */
-  objects: Map<string, IStoreObject>;
+  objects: Map<string, IStoreObject<any>>;
 
   /**
-   * Signal for when an object is modified to the store.
+   * Signal for when an object is modified in the store.
    */
-  signal: Signal<this, IStoreObject>;
+  signal: Signal<this, IStoreObject<any>>;
 
   /**
    * Connect store to kernel, obtain kernel store handler
@@ -57,20 +67,20 @@ export interface ITLabStore {
 
   /**
    * Filter objects in store.
+   * TODO: fix return type (generic instead of Model)
    * @param modelCls Class of the data model.
    */
-  filter(modelCls: any): Generator<IStoreObject>;
+  filter<T extends Model, U extends (new () => T)[] = (new () => T)[]>(
+    ...modelCls: U
+  ): Generator<IFilterResult<T>>;
 }
 
 /**
  * ITLabStore implementation.
  */
 export class TLabStore implements ITLabStore {
-  objects = new Map<string, IStoreObject>();
-  /**
-   * Signal for when the store is modified.
-   */
-  signal = new Signal<this, IStoreObject>(this);
+  objects = new Map<string, IStoreObject<any>>();
+  signal = new Signal<this, IStoreObject<any>>(this);
 
   private sessionContext;
   private kernelStoreHandler?: IKernelStoreHandler;
@@ -115,14 +125,14 @@ export class TLabStore implements ITLabStore {
     const data = this.manager.parseModel(rawObj);
     // Subscribe to changes
     data.subscribe(v => {
-      console.log('front change:', uuid, [v]);
-      this.kernelStoreHandler?.sendPatch(uuid, [v]);
+      console.log('front patch:', uuid, v);
+      if (!v._private) this.kernelStoreHandler?.sendPatch(uuid, [v]);
       this.signal.emit(storeObj);
     });
-    // Reflect.set(window, name, data);
+    Reflect.set(window, name, data);
 
     // Store the object and emit signal
-    const storeObj: IStoreObject = { name, uuid, data };
+    const storeObj: IStoreObject<any> = { name, uuid, data };
     this.objects.set(uuid, storeObj);
     this.signal.emit(storeObj);
 
@@ -147,7 +157,7 @@ export class TLabStore implements ITLabStore {
       switch (p.op) {
         case 'add':
         case 'replace':
-          parent.setWithoutEmit(path[path.length - 1], p.value);
+          parent.setSynced(path[path.length - 1], p.value, true);
           break;
         case 'remove':
           Reflect.deleteProperty(parent, path[path.length - 1]);
@@ -167,11 +177,30 @@ export class TLabStore implements ITLabStore {
     this.signal.emit(obj);
   }
 
-  *filter(modelCls: any) {
+  *filterObj<T extends Model, U extends (new () => T)[]>(
+    obj: any,
+    ...modelCls: U
+  ): Generator<{ path: string[]; data: T }> {
+    // The whole object is a match
+    if (modelCls.length === 0 || modelCls.some(cls => obj instanceof cls)) {
+      yield { path: [], data: obj };
+    }
+    // Iterate over its attributes
+    for (const [k, v] of Object.entries(obj)) {
+      // Attribute is a model, recurse
+      if (v instanceof Model) {
+        for (const { path, data } of this.filterObj(v, ...modelCls)) {
+          yield { path: [k, ...path], data: data as T };
+        }
+      }
+    }
+  }
+
+  *filter<T extends Model, U extends (new () => T)[]>(...modelCls: U) {
+    // Iterate over the objects in store
     for (const obj of this.objects.values()) {
-      // Check prototype
-      if (obj.data instanceof modelCls) {
-        yield obj;
+      for (const { path, data } of this.filterObj(obj.data, ...modelCls)) {
+        yield { uuid: obj.uuid, name: obj.name, path, data: data as T };
       }
     }
   }
@@ -184,12 +213,18 @@ export class TLabStore implements ITLabStore {
  */
 export function useStoreSignal(
   store: ITLabStore,
-  callback: (store: ITLabStore, obj: IStoreObject) => void
+  callback: (store: ITLabStore, obj?: IStoreObject<any>) => void
 ) {
   useEffect(() => {
     store.signal.connect(callback);
     return () => {
       store.signal.disconnect(callback);
     };
-  }, [callback, store.signal]);
+  }, [callback, store]);
+
+  useEffect(() => {
+    callback(store);
+    // TODO: fix this
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }

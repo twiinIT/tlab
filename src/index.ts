@@ -5,6 +5,7 @@ import { labBuiltinsPlugin } from './builtins';
 import { labFrontManagerPlugin } from './front';
 import { labPythonPlugin } from './python';
 import { labStoreManagerPlugin } from './store';
+import { labWidgetCtrlPlugin } from './widget-controller';
 import { labWidgetPlotlyPlugin } from './widget-plotly';
 import { labWidgetStorePlugin } from './widget-store';
 
@@ -16,6 +17,7 @@ const plugins = [
   labFrontManagerPlugin,
   labPythonPlugin,
   labStoreManagerPlugin,
+  labWidgetCtrlPlugin,
   labWidgetPlotlyPlugin,
   labWidgetStorePlugin
 ];

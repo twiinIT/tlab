@@ -1,6 +1,7 @@
 // Copyright (C) 2022, twiinIT
 // SPDX-License-Identifier: BSD-3-Clause
 
+import { useEffect, useState } from 'react';
 import { Subject, Subscription } from 'rxjs';
 
 /**
@@ -29,6 +30,7 @@ export interface IJSONPatchOperation<T> {
   op: JSONPatchOperationType;
   path: string[];
   value?: T;
+  _private?: boolean;
 }
 
 /**
@@ -59,27 +61,35 @@ export class Value<T> extends Subject<IJSONPatchOperation<T>> {
    * Set the internal value and emit a patch operation.
    */
   set value(value: T | undefined) {
-    // Validation and update
-    let op: JSONPatchOperationType = 'replace';
-    if (this._value === undefined) op = 'add';
-    const didChange = this.setWithoutEmit(value);
-    if (!didChange) return;
-    if (this._value === undefined) op = 'remove';
-    // Emit update event
-    this.next({ op, path: [], value: this.toJSON() });
+    this.set(value);
   }
 
   /**
    * Set the internal value without emitting a patch operation.
    */
-  setWithoutEmit(value: T | undefined) {
+  set(value: T | undefined, _private?: boolean) {
     if (value === this._value) return false;
+
+    // Validation and update
+    let op: JSONPatchOperationType = 'replace';
+    if (this._value === undefined) op = 'add';
     this._value = this.serializer?.deserialize?.(value) ?? value;
+
     // Update value subscription
     this._subscription?.unsubscribe();
-    this._subscription = (this._value as Model | undefined)?.subscribe?.({
-      next: v => this.next(v)
+    this._subscription = (this._value as Model | undefined)?.subscribe?.(v =>
+      this.next(v)
+    );
+
+    if (this._value === undefined) op = 'remove';
+    // Emit update event
+    this.next({
+      op,
+      path: [],
+      value: this.toJSON(),
+      _private
     });
+
     return true;
   }
 
@@ -98,8 +108,10 @@ export class Value<T> extends Subject<IJSONPatchOperation<T>> {
 export abstract class Model extends Subject<IJSONPatchOperation<any>> {
   /**
    * Model name. Should be something unique.
+   * TODO: Fix the double declaration.
    */
   static _modelName: string;
+  abstract _modelName: string;
 
   /**
    * List of synced keys + serializer filled by the @sync decorator.
@@ -116,19 +128,22 @@ export abstract class Model extends Subject<IJSONPatchOperation<any>> {
         const prev = this[key as keyof this];
         const val = new Value<typeof prev>(serializer);
         this._syncedValues[key] = val;
-        this.setWithoutEmit(key, prev);
+        this.setSynced(key, prev, true);
 
         // Attach value to model
         Reflect.defineProperty(this, key, {
+          enumerable: true,
           get: () => val.value,
           set: v => (val.value = v)
         });
 
         // Subscribe to synced attributes
-        val.subscribe({
-          next: ({ op, path, value }) =>
-            this.next({ op, path: [key.toString(), ...path], value })
-        });
+        val.subscribe(({ path, ...patch }) =>
+          this.next({
+            path: [key.toString(), ...path],
+            ...patch
+          })
+        );
       });
     }
   }
@@ -137,13 +152,14 @@ export abstract class Model extends Subject<IJSONPatchOperation<any>> {
    * Set an synced attribute without emmitting a patch operation.
    * @param key Synced key.
    * @param value New value.
+   * @param _private
    */
-  setWithoutEmit(key: string, value: any) {
-    this._syncedValues[key].setWithoutEmit(value);
+  setSynced(key: string, value: any, _private?: boolean) {
+    this._syncedValues[key].set(value, _private);
   }
 
   toJSON() {
-    return { _modelName: Model._modelName, ...this._syncedValues };
+    return { _modelName: this._modelName, ...this._syncedValues };
   }
 }
 
@@ -161,4 +177,35 @@ export function sync<T>(serializer?: ISerializer<T>): PropertyDecorator {
     }
     Reflect.set(syncedKeys, key, serializer);
   };
+}
+
+/**
+ * A "useState" hook for a synced value.
+ * TODO: replace with useSyncExternalStore?
+ * @param model Synced model.
+ * @param getter Getter to the value
+ * @param setter Setter to the value
+ * @returns [value, setValue]
+ */
+export function useSyncValue<T extends Model, U>(
+  model: T,
+  getter: (model: T) => U,
+  setter: (model: T, value: U) => void
+): [U, (value: U) => void] {
+  const [_value, _setValue] = useState(getter(model));
+
+  useEffect(() => {
+    const sub = model.subscribe(() => {
+      _setValue(getter(model));
+    });
+    return () => {
+      sub.unsubscribe();
+    };
+  }, [getter, model]);
+
+  const setValue = (value: U) => {
+    setter(model, value);
+  };
+
+  return [_value, setValue];
 }

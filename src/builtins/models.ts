@@ -10,6 +10,7 @@ interface IValueModel<T> extends Model {
 
 export class BooleanModel extends Model implements IValueModel<boolean> {
   static _modelName = 'Boolean';
+  _modelName = BooleanModel._modelName;
 
   @sync({
     deserialize: v => {
@@ -22,6 +23,7 @@ export class BooleanModel extends Model implements IValueModel<boolean> {
 
 export class NumberModel extends Model implements IValueModel<number> {
   static _modelName = 'Number';
+  _modelName = NumberModel._modelName;
 
   @sync({
     deserialize: v => {
@@ -34,6 +36,7 @@ export class NumberModel extends Model implements IValueModel<number> {
 
 export class StringModel extends Model implements IValueModel<string> {
   static _modelName = 'String';
+  _modelName = StringModel._modelName;
 
   @sync({
     deserialize: v => {
@@ -46,6 +49,7 @@ export class StringModel extends Model implements IValueModel<string> {
 
 export class ArrayModel extends Model implements IValueModel<any[]> {
   static _modelName = 'Array';
+  _modelName = ArrayModel._modelName;
 
   @sync({
     deserialize: v => {
@@ -57,7 +61,7 @@ export class ArrayModel extends Model implements IValueModel<any[]> {
 }
 
 export class NDArrayModel extends Model implements IValueModel<NdArray> {
-  static _modelName = 'NDArray';
+  _modelName = 'NDArray';
 
   @sync({
     deserialize: ({ shape, data }) => {
