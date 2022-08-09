@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from functools import partial
+from importlib import import_module
 from typing import TYPE_CHECKING, Any, Callable, Dict
 
 import reactivex as rx
@@ -67,8 +68,8 @@ class TLabKernelStore(rx.Subject):
     @on('fetch')
     def get(self, msg):
         # get model
-        # TODO: replace self.shell.user_ns with ??
         var_name = msg['content']['data']['name']
+        # TODO: replace self.shell.user_ns with ??
         var: 'Model' = self.shell.user_ns[var_name]
 
         # get metadata
@@ -121,3 +122,31 @@ class TLabKernelStore(rx.Subject):
                 pass
             else:
                 raise RuntimeError('Unknown patch op: ' + op)
+
+    @on('add')
+    def add(self, msg):
+        uuid = msg['metadata']['uuid']
+        name = msg['content']['data']['name']
+        data = msg['content']['data']['data']
+        parsed = self.parse(data)
+        # TODO: replace self.shell.user_ns with ??
+        self.shell.user_ns[name] = parsed
+        self.models[uuid] = parsed
+        self.comm.send(None, dict(method='reply',
+                                  reqId=msg['metadata']['reqId']))
+
+    def parse(self, obj: Dict):
+        model_cls = self.get_model(obj['_modelName'])
+        model = model_cls()
+        for key, val in obj.items():
+            if key == '_modelName':
+                continue
+            if isinstance(val, dict) and '_modelName' in val:
+                val = self.parse(val)
+            setattr(model, key, val)
+        return model
+
+    def get_model(self, model_name: str):
+        module_path, model_cls = self.classes[model_name]
+        module = import_module(module_path)
+        return getattr(module, model_cls)

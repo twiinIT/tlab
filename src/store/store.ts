@@ -96,6 +96,7 @@ export class TLabStore implements ITLabStore {
 
   private sessionContext;
   private kernelStoreHandler?: IKernelStoreHandler;
+  private toSend: [string, Model, string][] = [];
 
   constructor(
     private app: JupyterFrontEnd,
@@ -123,6 +124,11 @@ export class TLabStore implements ITLabStore {
       );
       await this.kernelStoreHandler.ready;
       console.log('KernelStore ready');
+
+      // TODO: why?
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.toSend.forEach(o => this.kernelStoreHandler!.add(...o));
+      this.toSend = [];
     }
   }
 
@@ -140,10 +146,13 @@ export class TLabStore implements ITLabStore {
   }
 
   add<T extends Model>(name: string, data: T, uuid?: string) {
-    let shouldAddInKernel = false;
     if (!uuid) {
       uuid = UUID.uuid4();
-      shouldAddInKernel = true;
+      if (this.kernelStoreHandler) {
+        this.kernelStoreHandler.add(name, data, uuid);
+      } else {
+        this.toSend.push([name, data, uuid]);
+      }
     }
 
     // Subscribe to changes

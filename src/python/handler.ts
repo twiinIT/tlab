@@ -5,7 +5,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { IComm } from '@jupyterlab/services/lib/kernel/kernel';
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
-import { IJSONPatchOperation } from '../store/models';
+import { IJSONPatchOperation, Model } from '../store/models';
 import { ITLabStore } from '../store/store';
 import { ITLabPythonManager } from './manager';
 
@@ -150,5 +150,9 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
       );
     }
     this.listeners.resolve(msg);
+  }
+
+  async add<T extends Model>(name: string, data: T, uuid?: string) {
+    await this.command('add', { name, data }, uuid);
   }
 }
