@@ -5,11 +5,11 @@ import React, { useState } from 'react';
 import { ITLabWidgetProps } from '../front/manager';
 import { useStoreSignal } from '../store/store';
 
-export function StoreWidget({ manager, store }: ITLabWidgetProps): JSX.Element {
+export function StoreWidget({ manager, store }: ITLabWidgetProps) {
   const [name, setName] = useState('');
   const [objList, setObjList] = useState('');
 
-  useStoreSignal(store, () => {
+  useStoreSignal(store, store => {
     setObjList(JSON.stringify([...store.objects.values()], undefined, 2));
   });
 

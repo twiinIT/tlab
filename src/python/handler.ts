@@ -83,7 +83,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     return msg.content.data;
   }
 
-  sendPatch(uuid: string, patch: IJSONPatchOperation<any>[]): void {
+  sendPatch<T>(uuid: string, patch: IJSONPatchOperation<T>[]): void {
     this.command('patch', patch, uuid, false);
   }
 

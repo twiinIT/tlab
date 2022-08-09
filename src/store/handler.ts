@@ -25,5 +25,5 @@ export interface IKernelStoreHandler {
    * @param uuid
    * @param patch
    */
-  sendPatch(uuid: string, patch: IJSONPatchOperation<any>[]): void;
+  sendPatch<T>(uuid: string, patch: IJSONPatchOperation<T>[]): void;
 }
