@@ -78,6 +78,8 @@ flowchart LR
     end
 ```
 
+Regarding the Python support, the Python plugin also exposes a [manager](../src/python/manager.ts) which registers the Python classes of the models that are to be used by the Python kernel module.
+
 ### Data models
 
 **Packages:**
