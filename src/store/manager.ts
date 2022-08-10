@@ -54,12 +54,14 @@ export interface ITLabStoreManager {
   /**
    * Get a data model
    * @param id
+   * @returns Model class.
    */
   getModel(id: string): ModelCls;
 
   /**
    * Deserialize a data model.
    * @param obj
+   * @returns Deserialized model.
    */
   parseModel(obj: any): Model;
 
@@ -69,9 +71,6 @@ export interface ITLabStoreManager {
   newStore(): ITLabStore;
 }
 
-/**
- * ITLabStoreManager implementation.
- */
 export class TLabStoreManager implements ITLabStoreManager {
   private kerStoreHandlerFactories = new Map<string, KerStoreHandlerFactory>();
   private kerStoreHandlers = new Map<string, IKernelStoreHandler>();

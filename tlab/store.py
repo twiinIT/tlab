@@ -125,6 +125,7 @@ class TLabKernelStore(rx.Subject):
 
     @on('add')
     def add(self, msg):
+        """Deserialize a model and add it to the namespace."""
         uuid = msg['metadata']['uuid']
         name = msg['content']['data']['name']
         data = msg['content']['data']['data']
@@ -136,11 +137,14 @@ class TLabKernelStore(rx.Subject):
                                   reqId=msg['metadata']['reqId']))
 
     def parse(self, obj: Dict):
+        # get model class
         model_cls = self.get_model(obj['_modelName'])
         model = model_cls()
+        # iterate on items
         for key, val in obj.items():
             if key == '_modelName':
                 continue
+            # if val is a serialized sub-model, deserialize it
             if isinstance(val, dict) and '_modelName' in val:
                 val = self.parse(val)
             setattr(model, key, val)

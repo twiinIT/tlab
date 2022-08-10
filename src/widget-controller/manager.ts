@@ -21,7 +21,16 @@ interface IControllerDict<T extends Model> {
 
 type ModelCls = (new () => Model) & { _modelName: string };
 
+/**
+ * Controller manager. Registers controllers and front-instantiable data models.
+ */
 export interface ITLabCtrlManager {
+  /**
+   * Register a controller.
+   * @param modelName
+   * @param component React component.
+   * @param controllerName
+   */
   registerController<T extends Model>(
     modelName: string,
     component: Controller<T>,
@@ -31,7 +40,7 @@ export interface ITLabCtrlManager {
   getControllers<T extends Model>(modelName: string): IControllerDict<T>;
 
   /**
-   * Register a instantiable data model.
+   * Register an instantiable data model.
    * @param modelCls Model class.
    */
   registerModel(modelCls: ModelCls): void;

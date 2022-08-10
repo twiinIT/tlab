@@ -47,6 +47,7 @@ export interface ITLabStore {
   /**
    * Connect store to kernel, obtain kernel store handler
    * and wait for kernel store to be ready.
+   * @returns Completion promise.
    */
   connect(): Promise<void>;
 
@@ -63,6 +64,7 @@ export interface ITLabStore {
    * @param name
    * @param model
    * @param uuid Do not set if the model is instantiated from the front end.
+   * @returns Store object
    */
   add<T extends Model>(name: string, model: T, uuid?: string): IStoreObject<T>;
 
@@ -75,21 +77,27 @@ export interface ITLabStore {
 
   /**
    * Filter objects in store.
-   * TODO: fix return type (generic instead of Model)
+   * FIXME: fix return type (generic instead of Model)
    * @param modelCls Class of the data model.
+   * @returns Generator of filtered objects.
    */
   filter<T extends Model, U extends (new () => T)[] = (new () => T)[]>(
     ...modelCls: U
   ): Generator<IFilterResult<T>>;
 
+  /**
+   * Import multiple serialized models into the store.
+   * @param exportData Serialized models.
+   */
   importAll(exportData: { name: string; data: any }[]): void;
 
+  /**
+   * Export all models from the store.
+   * @returns Serialized models.
+   */
   exportAll(): { name: string; data: any }[];
 }
 
-/**
- * ITLabStore implementation.
- */
 export class TLabStore implements ITLabStore {
   objects = new Map<string, IStoreObject<any>>();
   signal = new Signal<this, IStoreObject<any>>(this);
@@ -125,7 +133,7 @@ export class TLabStore implements ITLabStore {
       await this.kernelStoreHandler.ready;
       console.log('KernelStore ready');
 
-      // TODO: why?
+      // FIXME: why?
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.toSend.forEach(o => this.kernelStoreHandler!.add(...o));
       this.toSend = [];
@@ -271,7 +279,7 @@ export function useStoreSignal(
 
   useEffect(() => {
     callback(store);
-    // TODO: fix this
+    // FIXME: fix this
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

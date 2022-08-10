@@ -27,5 +27,12 @@ export interface IKernelStoreHandler {
    */
   sendPatch<T>(uuid: string, patch: IJSONPatchOperation<T>[]): void;
 
-  add<T extends Model>(name: string, data: T, uuid?: string): Promise<void>;
+  /**
+   * Add a new variable in the kernel.
+   * @param name
+   * @param data
+   * @param uuid For further reference.
+   * @returns Completion promise.
+   */
+  add<T extends Model>(name: string, data: T, uuid: string): Promise<void>;
 }

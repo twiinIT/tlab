@@ -152,7 +152,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     this.listeners.resolve(msg);
   }
 
-  async add<T extends Model>(name: string, data: T, uuid?: string) {
+  async add<T extends Model>(name: string, data: T, uuid: string) {
     await this.command('add', { name, data }, uuid);
   }
 }

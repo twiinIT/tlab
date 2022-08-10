@@ -7,8 +7,18 @@ export const ITLabPythonManager = new Token<ITLabPythonManager>(
   'tlab:ITLabPythonManager'
 );
 
+/**
+ * Registers Python model classes.
+ */
 export interface ITLabPythonManager {
+  /**
+   * Register a model class.
+   * @param modelName
+   * @param modulePath
+   * @param className
+   */
   registerClass(modelName: string, modulePath: string, className: string): void;
+
   getClasses(): [string, [string, string]][];
 }
 
