@@ -129,10 +129,11 @@ class TLabKernelStore(rx.Subject):
         uuid = msg['metadata']['uuid']
         name = msg['content']['data']['name']
         data = msg['content']['data']['data']
-        parsed = self.parse(data)
+        parsed: 'Model' = self.parse(data)
         # TODO: replace self.shell.user_ns with ??
         self.shell.user_ns[name] = parsed
         self.models[uuid] = parsed
+        parsed.subscribe(on_next=partial(self.on_model_patch, uuid))
         self.comm.send(None, dict(method='reply',
                                   reqId=msg['metadata']['reqId']))
 
