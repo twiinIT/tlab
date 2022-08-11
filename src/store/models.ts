@@ -20,7 +20,8 @@ export type JSONPatchOperationType =
   | 'replace'
   | 'move'
   | 'copy'
-  | 'test';
+  | 'test'
+  | 'message';
 
 /**
  * JSON Patch operation.

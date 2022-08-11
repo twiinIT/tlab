@@ -26,4 +26,8 @@ export class BallisticsModel extends Model {
     super();
     this.x0.value = [0, 0, 0];
   }
+
+  async runDrivers() {
+    this.next({ op: 'message', path: [], value: 'run_drivers' });
+  }
 }

@@ -103,6 +103,11 @@ class TLabKernelStore(rx.Subject):
             for p in path[:-1]:
                 parent = getattr(parent, p)
 
+            if op == 'message':
+                # FIXME: path[-1]?
+                parent.on_message(value)
+                return
+
             field = parent.__fields__[path[-1]]
             serializer = field.field_info.extra.get('serializer', None)
             if serializer is not None:

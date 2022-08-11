@@ -61,6 +61,9 @@ class Model(HasTraits):
 
         self._patch_subject.on_next(dict(op=op, path=path, value=value))
 
+    def on_message(self, msg):
+        pass
+
     def dict(self):
         d = dict(_modelName=self._modelName)
         for field in self.__fields__.values():

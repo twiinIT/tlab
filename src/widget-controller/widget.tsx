@@ -160,7 +160,7 @@ function Selector({
       <form
         onSubmit={e => {
           e.preventDefault();
-          const props = { res: attributes[attrVal] };
+          const props = { store, res: attributes[attrVal] };
           const el = createElement(controllers[ctrlVal], props);
           onAdd(el);
         }}

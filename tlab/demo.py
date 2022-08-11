@@ -99,6 +99,10 @@ class BallisticsTLab(Model):
         self.x.value = list(traj[:, 0])
         self.z.value = list(traj[:, 2])
 
+    def on_message(self, msg):
+        if msg == 'run_drivers':
+            self.run()
+
 
 # foo = BallisticsTLab()
 # foo.subscribe(print)
