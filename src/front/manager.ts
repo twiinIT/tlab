@@ -10,7 +10,6 @@ export const ITLabFrontManager = new Token<ITLabFrontManager>(
 
 /**
  * TLab front manager.
- *
  * Saves widgets and provides access to them.
  * TODO: workspace saves.
  */
@@ -57,9 +56,6 @@ export interface ITLabWidgetProps {
   store: ITLabStore;
 }
 
-/**
- * ITLabFrontManager implementation.
- */
 export class TLabFrontManager implements ITLabFrontManager {
   widgets = new Map<string, ITLabWidget>();
 

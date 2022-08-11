@@ -35,6 +35,7 @@ export interface IJSONPatchOperation<T> {
 
 /**
  * Subject proxy for a value.
+ * TODO: replace with ES6 Proxy.
  */
 export class Value<T> extends Subject<IJSONPatchOperation<T>> {
   /**
@@ -108,7 +109,8 @@ export class Value<T> extends Subject<IJSONPatchOperation<T>> {
 export abstract class Model extends Subject<IJSONPatchOperation<any>> {
   /**
    * Model name. Should be something unique.
-   * TODO: Fix the double declaration.
+   * FIXME: Fix the double declaration.
+   * FIXME: Cannot define an abstract static field...
    */
   static _modelName: string;
   abstract _modelName: string;
@@ -149,7 +151,7 @@ export abstract class Model extends Subject<IJSONPatchOperation<any>> {
   }
 
   /**
-   * Set an synced attribute without emmitting a patch operation.
+   * Set an synced attribute.
    * @param key Synced key.
    * @param value New value.
    * @param _private
@@ -164,9 +166,9 @@ export abstract class Model extends Subject<IJSONPatchOperation<any>> {
 }
 
 /**
- * Decorator to declare synced attributes on a model.
+ * Decorator factory to declare synced attributes on a model.
  * @param serializer Serializer for the attribute.
- * @returns
+ * @returns Decorator
  */
 export function sync<T>(serializer?: ISerializer<T>): PropertyDecorator {
   return (target, key) => {

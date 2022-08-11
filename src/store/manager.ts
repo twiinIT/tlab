@@ -12,7 +12,7 @@ export const ITLabStoreManager = new Token<ITLabStoreManager>(
   'tlab:ITLabStoreManager'
 );
 
-type KerStoreHandlerCls = new (
+type KerStoreHandlerFactory = (
   store: ITLabStore,
   kernel: Kernel.IKernelConnection
 ) => IKernelStoreHandler;
@@ -27,11 +27,11 @@ export interface ITLabStoreManager {
   /**
    * Register a kernel store handler.
    * @param language JupyterLab language string.
-   * @param handlerClass
+   * @param handlerFactory
    */
   registerKernelStoreHandler(
     language: string,
-    handlerClass: KerStoreHandlerCls
+    handlerFactory: KerStoreHandlerFactory
   ): void;
 
   /**
@@ -54,12 +54,19 @@ export interface ITLabStoreManager {
   /**
    * Get a data model
    * @param id
+   * @returns Model class.
    */
   getModel(id: string): ModelCls;
 
   /**
+   * @returns All model classes
+   */
+  getModels(): Map<string, ModelCls>;
+
+  /**
    * Deserialize a data model.
    * @param obj
+   * @returns Deserialized model.
    */
   parseModel(obj: any): Model;
 
@@ -69,11 +76,8 @@ export interface ITLabStoreManager {
   newStore(): ITLabStore;
 }
 
-/**
- * ITLabStoreManager implementation.
- */
 export class TLabStoreManager implements ITLabStoreManager {
-  private kerStoreHandlerCls = new Map<string, KerStoreHandlerCls>();
+  private kerStoreHandlerFactories = new Map<string, KerStoreHandlerFactory>();
   private kerStoreHandlers = new Map<string, IKernelStoreHandler>();
   private dataModels = new Map<string, ModelCls>();
 
@@ -81,9 +85,9 @@ export class TLabStoreManager implements ITLabStoreManager {
 
   registerKernelStoreHandler(
     language: string,
-    handlerClass: KerStoreHandlerCls
+    handlerFactory: KerStoreHandlerFactory
   ) {
-    this.kerStoreHandlerCls.set(language, handlerClass);
+    this.kerStoreHandlerFactories.set(language, handlerFactory);
   }
 
   async getKernelStoreHandler(
@@ -94,9 +98,9 @@ export class TLabStoreManager implements ITLabStoreManager {
     if (!handler) {
       const infos = await kernel.info;
       const language = infos.language_info.name;
-      const klass = this.kerStoreHandlerCls.get(language);
-      if (!klass) throw new Error('Language not supported');
-      handler = new klass(store, kernel);
+      const factory = this.kerStoreHandlerFactories.get(language);
+      if (!factory) throw new Error('Language not supported');
+      handler = factory(store, kernel);
       this.kerStoreHandlers.set(kernel.id, handler);
     }
     return handler;
@@ -110,6 +114,10 @@ export class TLabStoreManager implements ITLabStoreManager {
     const m = this.dataModels.get(id);
     if (!m) throw new Error('Model not registered');
     return m;
+  }
+
+  getModels() {
+    return this.dataModels;
   }
 
   parseModel(obj: any) {

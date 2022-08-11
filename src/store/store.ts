@@ -47,16 +47,26 @@ export interface ITLabStore {
   /**
    * Connect store to kernel, obtain kernel store handler
    * and wait for kernel store to be ready.
+   * @returns Completion promise.
    */
   connect(): Promise<void>;
 
   /**
-   * Fetch a variable from the kernel store.
+   * Fetch a variable from the kernel store and add it to the front store.
    * Its data model should be supported registered in store manager.
    * @param name Name of the variable in kernel.
    * @returns Variable promise.
    */
   fetch(name: string): Promise<any>;
+
+  /**
+   * Add a new model to the store.
+   * @param name
+   * @param model
+   * @param uuid Do not set if the model is instantiated from the front end.
+   * @returns Store object
+   */
+  add<T extends Model>(name: string, model: T, uuid?: string): IStoreObject<T>;
 
   /**
    * Patch a object in store.
@@ -67,23 +77,39 @@ export interface ITLabStore {
 
   /**
    * Filter objects in store.
-   * TODO: fix return type (generic instead of Model)
+   * FIXME: fix return type (generic instead of Model)
    * @param modelCls Class of the data model.
+   * @returns Generator of filtered objects.
    */
   filter<T extends Model, U extends (new () => T)[] = (new () => T)[]>(
     ...modelCls: U
   ): Generator<IFilterResult<T>>;
+
+  /**
+   * Import multiple serialized models into the store.
+   * @param exportData Serialized models.
+   */
+  importAll(exportData: { name: string; data: any }[]): void;
+
+  /**
+   * Export all models from the store.
+   * @returns Serialized models.
+   */
+  exportAll(): { name: string; data: any }[];
+
+  /**
+   * @returns TLabStoreManager.getModels()
+   */
+  getModels(): Map<string, new () => Model>;
 }
 
-/**
- * ITLabStore implementation.
- */
 export class TLabStore implements ITLabStore {
   objects = new Map<string, IStoreObject<any>>();
   signal = new Signal<this, IStoreObject<any>>(this);
 
   private sessionContext;
   private kernelStoreHandler?: IKernelStoreHandler;
+  private toSend: [string, Model, string][] = [];
 
   constructor(
     private app: JupyterFrontEnd,
@@ -111,6 +137,11 @@ export class TLabStore implements ITLabStore {
       );
       await this.kernelStoreHandler.ready;
       console.log('KernelStore ready');
+
+      // FIXME: why?
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.toSend.forEach(o => this.kernelStoreHandler!.add(...o));
+      this.toSend = [];
     }
   }
 
@@ -123,16 +154,30 @@ export class TLabStore implements ITLabStore {
 
     // Parse the model
     const data = this.manager.parseModel(rawObj);
+
+    return this.add(name, data, uuid);
+  }
+
+  add<T extends Model>(name: string, data: T, uuid?: string) {
+    if (!uuid) {
+      uuid = UUID.uuid4();
+      if (this.kernelStoreHandler) {
+        this.kernelStoreHandler.add(name, data, uuid);
+      } else {
+        this.toSend.push([name, data, uuid]);
+      }
+    }
+
     // Subscribe to changes
     data.subscribe(v => {
       console.log('front patch:', uuid, v);
-      if (!v._private) this.kernelStoreHandler?.sendPatch(uuid, [v]);
+      if (!v._private) this.kernelStoreHandler?.sendPatch(uuid as string, [v]);
       this.signal.emit(storeObj);
     });
     Reflect.set(window, name, data);
 
     // Store the object and emit signal
-    const storeObj: IStoreObject<any> = { name, uuid, data };
+    const storeObj: IStoreObject<T> = { name, uuid, data };
     this.objects.set(uuid, storeObj);
     this.signal.emit(storeObj);
 
@@ -204,6 +249,25 @@ export class TLabStore implements ITLabStore {
       }
     }
   }
+
+  importAll(exportData: { name: string; data: any }[]) {
+    for (const { name, data } of exportData) {
+      const parsed = this.manager.parseModel(data);
+      this.add(name, parsed);
+    }
+  }
+
+  exportAll() {
+    const data = [];
+    for (const obj of this.objects.values()) {
+      data.push({ name: obj.name, data: obj.data });
+    }
+    return data;
+  }
+
+  getModels() {
+    return this.manager.getModels();
+  }
 }
 
 /**
@@ -224,7 +288,7 @@ export function useStoreSignal(
 
   useEffect(() => {
     callback(store);
-    // TODO: fix this
+    // FIXME: fix this
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

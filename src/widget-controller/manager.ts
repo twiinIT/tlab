@@ -19,7 +19,16 @@ interface IControllerDict<T extends Model> {
   [componentName: string]: Controller<T>;
 }
 
+/**
+ * Controller manager. Registers controllers and front-instantiable data models.
+ */
 export interface ITLabCtrlManager {
+  /**
+   * Register a controller.
+   * @param modelName
+   * @param component React component.
+   * @param controllerName
+   */
   registerController<T extends Model>(
     modelName: string,
     component: Controller<T>,
@@ -30,8 +39,8 @@ export interface ITLabCtrlManager {
 }
 
 export class TLabCtrlManager implements ITLabCtrlManager {
-  private ctrlMap: { [modelName: string]: IControllerDict<any> | undefined } =
-    {};
+  // TODO: replace w/ Map?
+  private ctrlMap: { [name: string]: IControllerDict<any> | undefined } = {};
 
   registerController<T extends Model>(
     modelName: string,

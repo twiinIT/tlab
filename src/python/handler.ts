@@ -5,8 +5,9 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { IComm } from '@jupyterlab/services/lib/kernel/kernel';
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { IKernelStoreHandler } from '../store/handler';
-import { IJSONPatchOperation } from '../store/models';
+import { IJSONPatchOperation, Model } from '../store/models';
 import { ITLabStore } from '../store/store';
+import { ITLabPythonManager } from './manager';
 
 const TARGET_NAME = 'tlab';
 
@@ -66,6 +67,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
   >();
 
   constructor(
+    private manager: ITLabPythonManager,
     private store: ITLabStore,
     private kernel: Kernel.IKernelConnection
   ) {
@@ -98,7 +100,7 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
     await this.kernel.requestExecute({ code }).done;
     const reqId = UUID.uuid4();
     this.cmdDelegates.set(reqId, this._ready);
-    this.comm?.open(undefined, { method: 'open', reqId });
+    this.comm?.open(this.manager.getClasses(), { method: 'open', reqId });
   }
 
   /**
@@ -148,5 +150,9 @@ export class PythonKernelStoreHandler implements IKernelStoreHandler {
       );
     }
     this.listeners.resolve(msg);
+  }
+
+  async add<T extends Model>(name: string, data: T, uuid: string) {
+    await this.command('add', { name, data }, uuid);
   }
 }

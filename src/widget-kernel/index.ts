@@ -6,20 +6,20 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { ITLabFrontManager } from '../front/manager';
-import { StoreWidget } from './widget';
+import { KernelWidget } from './widget';
 
 /**
- * Store controller widget plugin.
+ * Kernel controller widget plugin.
  */
-export const labWidgetStorePlugin: JupyterFrontEndPlugin<void> = {
-  id: 'tlab:widget_store',
+export const labWidgetKernelPlugin: JupyterFrontEndPlugin<void> = {
+  id: 'tlab:widget_kernel',
   autoStart: true,
   requires: [ITLabFrontManager],
   activate: (app: JupyterFrontEnd, manager: ITLabFrontManager) => {
     manager.registerWidget({
-      id: 'store',
-      name: 'Store',
-      component: StoreWidget
+      id: 'kernel',
+      name: 'Kernel',
+      component: KernelWidget
     });
   }
 };
