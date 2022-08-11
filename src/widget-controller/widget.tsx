@@ -90,11 +90,13 @@ function Creator({
 }) {
   const [modelName, setModelName] = useState('');
   const [name, setName] = useState('');
-  const models = useMemo(() => ctrlManager.getModels(), [ctrlManager]);
+  const models = useMemo(() => store.getModels(), [store]);
 
   const onSubmit: React.FormEventHandler<HTMLFormElement> = e => {
     e.preventDefault();
-    const model = new models[modelName]();
+    const cls = models.get(modelName);
+    if (!cls) throw new Error(`Model ${modelName} not found`);
+    const model = new cls();
     store.add(name, model);
     setModelName('');
     setName('');

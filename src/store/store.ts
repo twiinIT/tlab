@@ -96,6 +96,11 @@ export interface ITLabStore {
    * @returns Serialized models.
    */
   exportAll(): { name: string; data: any }[];
+
+  /**
+   * @returns TLabStoreManager.getModels()
+   */
+  getModels(): Map<string, new () => Model>;
 }
 
 export class TLabStore implements ITLabStore {
@@ -258,6 +263,10 @@ export class TLabStore implements ITLabStore {
       data.push({ name: obj.name, data: obj.data });
     }
     return data;
+  }
+
+  getModels() {
+    return this.manager.getModels();
   }
 }
 

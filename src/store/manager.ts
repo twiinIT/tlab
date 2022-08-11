@@ -59,6 +59,11 @@ export interface ITLabStoreManager {
   getModel(id: string): ModelCls;
 
   /**
+   * @returns All model classes
+   */
+  getModels(): Map<string, ModelCls>;
+
+  /**
    * Deserialize a data model.
    * @param obj
    * @returns Deserialized model.
@@ -109,6 +114,10 @@ export class TLabStoreManager implements ITLabStoreManager {
     const m = this.dataModels.get(id);
     if (!m) throw new Error('Model not registered');
     return m;
+  }
+
+  getModels() {
+    return this.dataModels;
   }
 
   parseModel(obj: any) {
