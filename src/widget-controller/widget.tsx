@@ -107,7 +107,7 @@ function Creator({
       <form onSubmit={onSubmit}>
         <select value={modelName} onChange={e => setModelName(e.target.value)}>
           <option value="">Select a model</option>
-          {Object.keys(models).map(name => (
+          {[...models.keys()].map(name => (
             <option key={name} value={name}>
               {name}
             </option>
