@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import { labBuiltinsPlugin } from './builtins';
+import { labDemoPlugin } from './demo';
 import { labFrontManagerPlugin } from './front';
 import { labPythonPlugin } from './python';
 import { labStoreManagerPlugin } from './store';
@@ -14,6 +15,7 @@ import { labWidgetPlotlyPlugin } from './widget-plotly';
  */
 const plugins = [
   labBuiltinsPlugin,
+  labDemoPlugin,
   labFrontManagerPlugin,
   labPythonPlugin,
   labStoreManagerPlugin,

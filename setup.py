@@ -75,6 +75,7 @@ setup_args = dict(
         "reactivex",
         "pyportrait @ git+https://github.com/twiinIT/pyportrait.git@09ecc69b0747705c6c3cabf11d78897b6aa67ea0",
         "numpy",
+        "cosapp",
     ],
 )
 
