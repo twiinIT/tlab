@@ -41,6 +41,7 @@ class Model(HasTraits):
             if trait.field_info.extra.get("observable", False):
                 val = getattr(self, name)
                 if isinstance(val, Model):
+                    # FIXME: add cleaning/unsubscribe
                     val.subscribe(partial(self.p_wrapper, name))
 
     def subscribe(self, *args, **kwargs):
@@ -64,6 +65,7 @@ class Model(HasTraits):
     def on_message(self, msg):
         pass
 
+    # override of Basemodel
     def dict(self):
         d = dict(_modelName=self._modelName)
         for field in self.__fields__.values():
@@ -77,12 +79,14 @@ class Model(HasTraits):
             d[field.name] = value
         return d
 
+    # override of HasTraits
     def __setattr__(self, name, value):
         try:
             old = super().__getattribute__(name)
             BaseModel.__setattr__(self, name, value)
 
             if isinstance(value, Model):
+                # FIXME: add cleaning/unsubscribe
                 value.subscribe(partial(self.p_wrapper, name))
 
             with suppress(Exception):

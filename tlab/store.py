@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from ipykernel.comm import Comm
     from IPython import get_ipython
 
-    from .models import Model
+    from tlab.models import Model
 
 _handlers = {}
 

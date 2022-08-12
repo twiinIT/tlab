@@ -24,7 +24,7 @@ export type JSONPatchOperationType =
   | 'message';
 
 /**
- * JSON Patch operation.
+ * Extended JSON Patch operation.
  * https://datatracker.ietf.org/doc/html/rfc6902/
  */
 export interface IJSONPatchOperation<T> {
