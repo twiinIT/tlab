@@ -85,6 +85,13 @@ function TLab({ manager, store }: ITLabWidgetProps) {
           break;
         }
       }
+
+      // For plotly among others
+      // FIXME: this is a hack to make sure the component is resized when the tab is resized
+      node.setEventListener('resize', () => {
+        window.dispatchEvent(new Event('resize'));
+      });
+
       return component;
     }
   };

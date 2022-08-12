@@ -48,7 +48,7 @@ export function PlotlyWidget({ manager, store }: ITLabWidgetProps) {
   const onToggleControls = () => {
     setHideControls(!hideControls);
     // Force a resize event (listened by useResizeHandler)
-    // TODO: Find an alternative way to do this
+    // FIXME: Find a better way to achieve this
     window.dispatchEvent(new Event('resize'));
   };
 
