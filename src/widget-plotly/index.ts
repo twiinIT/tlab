@@ -15,8 +15,8 @@ export const labWidgetPlotlyPlugin: JupyterFrontEndPlugin<void> = {
   id: 'tlab:widget_plotly',
   autoStart: true,
   requires: [ITLabFrontManager],
-  activate: (app: JupyterFrontEnd, manager: ITLabFrontManager) => {
-    manager.registerWidget({
+  activate: (app: JupyterFrontEnd, frontManager: ITLabFrontManager) => {
+    frontManager.registerWidget({
       id: 'plotly',
       name: 'Plotly',
       component: PlotlyWidget

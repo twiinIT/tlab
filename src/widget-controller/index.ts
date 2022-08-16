@@ -18,12 +18,12 @@ export const labWidgetCtrlPlugin: JupyterFrontEndPlugin<ITLabCtrlManager> = {
   requires: [ITLabFrontManager],
   provides: ITLabCtrlManager,
   activate: (app: JupyterFrontEnd, frontManager: ITLabFrontManager) => {
-    const manager = new TLabCtrlManager();
+    const ctrlManager = new TLabCtrlManager();
     frontManager.registerWidget({
       id: 'controller',
       name: 'Controller',
-      component: props => ControllerWidget({ ...props, ctrlManager: manager })
+      component: props => ControllerWidget({ ...props, ctrlManager })
     });
-    return manager;
+    return ctrlManager;
   }
 };

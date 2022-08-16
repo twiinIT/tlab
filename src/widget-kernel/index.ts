@@ -15,8 +15,8 @@ export const labWidgetKernelPlugin: JupyterFrontEndPlugin<void> = {
   id: 'tlab:widget_kernel',
   autoStart: true,
   requires: [ITLabFrontManager],
-  activate: (app: JupyterFrontEnd, manager: ITLabFrontManager) => {
-    manager.registerWidget({
+  activate: (app: JupyterFrontEnd, frontManager: ITLabFrontManager) => {
+    frontManager.registerWidget({
       id: 'kernel',
       name: 'Kernel',
       component: KernelWidget
