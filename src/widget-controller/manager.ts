@@ -3,13 +3,14 @@
 
 import { Token } from '@lumino/coreutils';
 import { Model } from '../store/models';
-import { IFilterResult } from '../store/store';
+import { IFilterResult, ITLabStore } from '../store/store';
 
 export const ITLabCtrlManager = new Token<ITLabCtrlManager>(
   'tlab:ITLabCtrlManager'
 );
 
 export interface IControllerProps<T extends Model> {
+  store: ITLabStore;
   res: IFilterResult<T>;
 }
 

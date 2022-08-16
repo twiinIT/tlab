@@ -107,11 +107,13 @@ function Creator({
       <form onSubmit={onSubmit}>
         <select value={modelName} onChange={e => setModelName(e.target.value)}>
           <option value="">Select a model</option>
-          {[...models.keys()].map(name => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
+          {[...models.keys()]
+            .sort((a, b) => a.localeCompare(b))
+            .map(name => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
         </select>
         <input
           type="text"
@@ -160,7 +162,7 @@ function Selector({
       <form
         onSubmit={e => {
           e.preventDefault();
-          const props = { res: attributes[attrVal] };
+          const props = { store, res: attributes[attrVal] };
           const el = createElement(controllers[ctrlVal], props);
           onAdd(el);
         }}

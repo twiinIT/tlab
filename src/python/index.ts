@@ -18,11 +18,11 @@ export const labPythonPlugin: JupyterFrontEndPlugin<ITLabPythonManager> = {
   requires: [ITLabStoreManager],
   provides: ITLabPythonManager,
   activate: (app: JupyterFrontEnd, storeManager: ITLabStoreManager) => {
-    const manager = new TLabPythonManager();
+    const pyManager = new TLabPythonManager();
     storeManager.registerKernelStoreHandler(
       'python',
-      (...args) => new PythonKernelStoreHandler(manager, ...args)
+      (...args) => new PythonKernelStoreHandler(pyManager, ...args)
     );
-    return manager;
+    return pyManager;
   }
 };

@@ -15,7 +15,7 @@ export const labStoreManagerPlugin: JupyterFrontEndPlugin<ITLabStoreManager> = {
   autoStart: true,
   provides: ITLabStoreManager,
   activate: (app: JupyterFrontEnd) => {
-    const manager = new TLabStoreManager(app);
-    return manager;
+    const storeManager = new TLabStoreManager(app);
+    return storeManager;
   }
 };

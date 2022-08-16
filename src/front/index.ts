@@ -23,15 +23,14 @@ namespace CommandIDs {
 export const labFrontManagerPlugin: JupyterFrontEndPlugin<ITLabFrontManager> = {
   id: 'tlab:front_manager',
   autoStart: true,
-  requires: [ITLabStoreManager, ILabShell],
-  optional: [ICommandPalette, ILauncher],
+  requires: [ILabShell, ICommandPalette, ILauncher, ITLabStoreManager],
   provides: ITLabFrontManager,
   activate: (
     app: JupyterFrontEnd,
-    storeManager: ITLabStoreManager,
     labShell: ILabShell,
-    palette?: ICommandPalette,
-    launcher?: ILauncher
+    palette: ICommandPalette,
+    launcher: ILauncher,
+    storeManager: ITLabStoreManager
   ) => {
     const frontManager = new TLabFrontManager();
 
@@ -51,8 +50,8 @@ export const labFrontManagerPlugin: JupyterFrontEndPlugin<ITLabFrontManager> = {
       }
     });
 
-    palette?.addItem({ command, category });
-    launcher?.add({ command, category });
+    palette.addItem({ command, category });
+    launcher.add({ command, category });
 
     console.log('JupyterLab extension tlab is activated!');
     return frontManager;

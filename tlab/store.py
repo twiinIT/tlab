@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from ipykernel.comm import Comm
     from IPython import get_ipython
 
-    from .models import Model
+    from tlab.models import Model
 
 _handlers = {}
 
@@ -101,7 +101,12 @@ class TLabKernelStore(rx.Subject):
 
             parent = var
             for p in path[:-1]:
-                parent = parent[p]
+                parent = getattr(parent, p)
+
+            if op == 'message':
+                # FIXME: path[-1]?
+                parent.on_message(value)
+                return
 
             field = parent.__fields__[path[-1]]
             serializer = field.field_info.extra.get('serializer', None)
@@ -138,9 +143,10 @@ class TLabKernelStore(rx.Subject):
                                   reqId=msg['metadata']['reqId']))
 
     def parse(self, obj: Dict):
+        """TODO: use pydantic native deserializer."""
         # get model class
         model_cls = self.get_model(obj['_modelName'])
-        model = model_cls()
+        model: 'Model' = model_cls()
         # iterate on items
         for key, val in obj.items():
             if key == '_modelName':

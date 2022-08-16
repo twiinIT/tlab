@@ -1,7 +1,7 @@
 // Copyright (C) 2022, twiinIT
 // SPDX-License-Identifier: BSD-3-Clause
 
-import plotly from 'plotly.js/dist/plotly';
+import Plotly from 'plotly.js/dist/plotly';
 import React, { useState } from 'react';
 import PlotlyEditor from 'react-chart-editor';
 import 'react-chart-editor/lib/react-chart-editor.css';
@@ -14,6 +14,7 @@ export function PlotlyWidget({ manager, store }: ITLabWidgetProps) {
   const [config, setConfig] = useState<any>({ editable: true });
   const [dataSources, setDataSources] = useState<any>();
   const [dataSourceOptions, setDataSourceOptions] = useState<any>();
+  const [hideControls, setHideControls] = useState(false);
 
   // Once when the widget is mounted
   // And when the store changes
@@ -44,21 +45,30 @@ export function PlotlyWidget({ manager, store }: ITLabWidgetProps) {
     setState({ ...state, data: newData });
   });
 
+  const onToggleControls = () => {
+    setHideControls(!hideControls);
+    // Force a resize event (listened by useResizeHandler)
+    // FIXME: Find a better way to achieve this
+    window.dispatchEvent(new Event('resize'));
+  };
+
   return (
-    <div>
+    <>
+      <button onClick={onToggleControls}>Toggle Controls</button>
       <PlotlyEditor
+        hideControls={hideControls}
         data={state.data}
         layout={state.layout}
         config={config}
         frames={state.frames}
         dataSources={dataSources}
         dataSourceOptions={dataSourceOptions}
-        plotly={plotly}
+        plotly={Plotly}
         onUpdate={(data, layout, frames) => setState({ data, layout, frames })}
         useResizeHandler
         debug
         advancedTraceTypeSelector
       />
-    </div>
+    </>
   );
 }
