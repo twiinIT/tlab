@@ -10,6 +10,9 @@ from pyportrait import Trait
 from tlab.builtins import ArrayModel
 from tlab.models import Model
 
+# Inspired from
+# https://cosapp.readthedocs.io/en/latest/tutorials/TimeDriverAdvanced.html
+
 
 class PointMass(System):
     """Free fall of a point mass, with friction"""
