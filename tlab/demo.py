@@ -102,10 +102,3 @@ class BallisticsTLab(Model):
     def on_message(self, msg):
         if msg == 'run_drivers':
             self.run()
-
-
-# foo = BallisticsTLab()
-# foo.subscribe(print)
-# foo.x0.value = [0, 0, 0]
-# foo.run()
-# print(foo.dict())
