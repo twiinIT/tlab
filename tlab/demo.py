@@ -10,6 +10,9 @@ from pyportrait import Trait
 from tlab.builtins import ArrayModel
 from tlab.models import Model
 
+# Inspired from
+# https://cosapp.readthedocs.io/en/latest/tutorials/TimeDriverAdvanced.html
+
 
 class PointMass(System):
     """Free fall of a point mass, with friction"""
@@ -102,10 +105,3 @@ class BallisticsTLab(Model):
     def on_message(self, msg):
         if msg == 'run_drivers':
             self.run()
-
-
-# foo = BallisticsTLab()
-# foo.subscribe(print)
-# foo.x0.value = [0, 0, 0]
-# foo.run()
-# print(foo.dict())
